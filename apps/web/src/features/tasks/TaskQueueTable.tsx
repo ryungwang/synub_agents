@@ -1,6 +1,6 @@
+import { riskLabel, statusLabel } from "../../app/labels";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge, riskTone, statusTone } from "../../components/ui/StatusBadge";
-import { riskLabel, statusLabel } from "../../app/labels";
 import type { Task } from "../../types/domain";
 
 interface Props {

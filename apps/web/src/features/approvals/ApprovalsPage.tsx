@@ -1,6 +1,6 @@
+import { approvalTypeLabel, riskLabel, statusLabel } from "../../app/labels";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge, riskTone, statusTone } from "../../components/ui/StatusBadge";
-import { approvalTypeLabel, riskLabel, statusLabel } from "../../app/labels";
 import type { Approval } from "../../types/domain";
 
 export function ApprovalsPage({ approvals, onApprove }: { approvals: Approval[]; onApprove: (approvalId: number) => void }) {

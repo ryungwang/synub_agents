@@ -5,7 +5,7 @@ const statusLabels: Record<string, string> = {
   BLOCKED: "차단됨",
   QUEUED: "대기열",
   APPROVAL_REQUIRED: "승인 필요",
-  WORKER_JOB_CREATED: "작업 생성됨",
+  WORKER_JOB_CREATED: "작업 실행 생성됨",
   PR_READY: "PR 준비됨",
   PR_OPEN: "PR 열림",
   DONE: "완료",

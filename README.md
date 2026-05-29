@@ -16,6 +16,8 @@ This repository contains a real service scaffold, not a static demo:
 - [운영자 매뉴얼](docs/OPERATOR_MANUAL.md)
 - [Codex Worker 매뉴얼](docs/WORKER_MANUAL.md)
 - [GitHub 토큰 발급 및 운영 등록 절차](docs/GITHUB_TOKEN_SETUP.md)
+- [남은 작업 상세 분석](docs/REMAINING_WORK_ANALYSIS.md)
+- [사용자가 직접 해야 할 작업 체크리스트](docs/OWNER_ACTION_CHECKLIST.md)
 - [운영 런북](docs/operation-runbook.md)
 - [보안 정책](docs/security-policy.md)
 
@@ -40,15 +42,15 @@ http://127.0.0.1:8080
 ```powershell
 $env:Path="C:\Users\User\intellij-workspace\synub_agents\.node-local\node-v22.11.0-win-x64;$env:Path"
 cd apps\web
-npm run dev -- --port 3000
+npm run dev -- --host 127.0.0.1 --port 3002
 ```
 
-If port `3000` is busy, Vite will use `3001`.
+If port `3002` is busy, choose another free port and keep the API proxy setting aligned.
 
 Dashboard URL currently verified:
 
 ```text
-http://127.0.0.1:3001
+http://127.0.0.1:3002
 ```
 
 ### Worker

@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
+import { riskLabel, statusLabel } from "../../app/labels";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge, riskTone, statusTone } from "../../components/ui/StatusBadge";
-import { riskLabel, statusLabel } from "../../app/labels";
 import type { Task, WorkerJob } from "../../types/domain";
 
 export function TaskDetailPanel({ task, workerJobs }: { task: Task | null; workerJobs: WorkerJob[] }) {
@@ -9,7 +9,7 @@ export function TaskDetailPanel({ task, workerJobs }: { task: Task | null; worke
     return (
       <section className="panel">
         <p className="eyebrow">작업 상세</p>
-        <h2>선택한 작업</h2>
+        <h2>선택된 작업</h2>
         <EmptyState>대기열에서 작업을 선택하세요.</EmptyState>
       </section>
     );

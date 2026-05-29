@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createAgent, fetchAgents, type CreateAgentPayload } from "../api/agentsApi";
-import { fetchApprovals, approveTask } from "../api/approvalsApi";
+import { approveTask, fetchApprovals } from "../api/approvalsApi";
 import { fetchAuditLogs } from "../api/auditApi";
 import { fetchGitHubIssues, fetchGitHubStatus, syncReadyIssues } from "../api/githubApi";
 import { createWorkerJob, fetchTasks } from "../api/tasksApi";
@@ -123,7 +123,7 @@ export function App() {
     try {
       await createWorkerJob(taskId);
       await refresh();
-      setToast("작업 실행이 생성되었습니다");
+      setToast("작업 실행이 생성되었습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "작업 실행 생성 실패");
     }
@@ -133,7 +133,7 @@ export function App() {
     try {
       await approveTask(approvalId);
       await refresh();
-      setToast("승인되었습니다");
+      setToast("승인되었습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "승인 실패");
     }
@@ -143,7 +143,7 @@ export function App() {
     try {
       await createAgent(payload);
       await refresh();
-      setToast("AI 직원이 추가되었습니다");
+      setToast("AI 직원이 추가되었습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "AI 직원 추가 실패");
     }
@@ -193,7 +193,7 @@ export function App() {
         <section className="panel" id="pull-requests">
           <p className="eyebrow">Pull Request</p>
           <h2>PR 결과 채널</h2>
-          <p className="muted">GitHub 작업 설정이 완료되면 성공한 Codex 변경 사항이 브랜치에 푸시되고 Pull Request로 열립니다.</p>
+          <p className="muted">GitHub 작업 설정이 완료되면 성공한 Codex 변경 사항을 브랜치에 push하고 Pull Request로 엽니다.</p>
         </section>
       </section>
 

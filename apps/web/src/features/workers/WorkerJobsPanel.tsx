@@ -1,6 +1,6 @@
+import { statusLabel } from "../../app/labels";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge, statusTone } from "../../components/ui/StatusBadge";
-import { statusLabel } from "../../app/labels";
 import type { WorkerJob } from "../../types/domain";
 
 export function WorkerJobsPanel({ jobs }: { jobs: WorkerJob[] }) {
@@ -9,7 +9,7 @@ export function WorkerJobsPanel({ jobs }: { jobs: WorkerJob[] }) {
       <div className="panel-heading">
         <div>
           <p className="eyebrow">작업 실행</p>
-          <h2>실행 내역</h2>
+          <h2>실행 이력</h2>
         </div>
       </div>
       <div className="table-list">

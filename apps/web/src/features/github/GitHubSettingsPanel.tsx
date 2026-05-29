@@ -21,7 +21,7 @@ export function GitHubSettingsPanel({ status }: { status: GitHubStatus | null })
         <Row label="연결 상태" value={status?.message ? connectionMessageLabel(status.message) : "확인 전"} />
       </div>
       <div className="meta-row">
-        <StatusBadge tone={reachable ? "good" : "danger"}>{reachable ? "연결됨" : "준비 안 됨"}</StatusBadge>
+        <StatusBadge tone={reachable ? "good" : "danger"}>{reachable ? "연결됨" : "준비 필요"}</StatusBadge>
       </div>
     </section>
   );
