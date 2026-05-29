@@ -15,6 +15,7 @@ This repository contains a real service scaffold, not a static demo:
 
 - [운영자 매뉴얼](docs/OPERATOR_MANUAL.md)
 - [Codex Worker 매뉴얼](docs/WORKER_MANUAL.md)
+- [GitHub 토큰 발급 및 운영 등록 절차](docs/GITHUB_TOKEN_SETUP.md)
 - [운영 런북](docs/operation-runbook.md)
 - [보안 정책](docs/security-policy.md)
 
