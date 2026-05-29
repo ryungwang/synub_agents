@@ -57,10 +57,10 @@ Set these before running API and worker:
 
 ```powershell
 $env:GITHUB_TOKEN='ghp_...'
-$env:GITHUB_OWNER='your-org-or-user'
-$env:GITHUB_REPO='your-repo'
+$env:GITHUB_OWNER='ryungwang'
+$env:GITHUB_REPO='synub-teams-ai'
 $env:GITHUB_READY_LABEL='codex-ready'
-$env:CODEX_WORKSPACE_ROOT='C:\Users\User\intellij-workspace\your-repo'
+$env:CODEX_WORKSPACE_ROOT='C:\Users\User\intellij-workspace\synub-teams-ai'
 $env:WORKER_SECRET='change-this'
 ```
 
