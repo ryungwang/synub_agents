@@ -78,6 +78,18 @@ export interface GitHubIssue {
   comments: number;
 }
 
+export interface LocalServicesStatus {
+  apiRunning: boolean;
+  webRunning: boolean;
+  worker: {
+    running: boolean;
+    pid: number | null;
+  };
+  workspaceRoot: string;
+  logDirectory: string;
+  checkedAt: string;
+}
+
 export interface AuditLog {
   id: number;
   actorType: string;

@@ -3,6 +3,7 @@ import { createAgent, fetchAgents, type CreateAgentPayload } from "../api/agents
 import { approveTask, fetchApprovals } from "../api/approvalsApi";
 import { fetchAuditLogs } from "../api/auditApi";
 import { fetchGitHubIssues, fetchGitHubStatus, syncReadyIssues } from "../api/githubApi";
+import { fetchLocalServicesStatus, startWorkerService, stopWorkerService } from "../api/localServicesApi";
 import { createWorkerJob, fetchTasks } from "../api/tasksApi";
 import { fetchWorkerJobs } from "../api/workerJobsApi";
 import { AppShell } from "../components/layout/AppShell";
@@ -12,10 +13,11 @@ import { ApprovalsPage } from "../features/approvals/ApprovalsPage";
 import { AuditLogPage } from "../features/audit/AuditLogPage";
 import { GitHubSettingsPanel } from "../features/github/GitHubSettingsPanel";
 import { IssueInboxPanel } from "../features/issues/IssueInboxPanel";
+import { LocalServicesPanel } from "../features/operations/LocalServicesPanel";
 import { TaskDetailPanel } from "../features/tasks/TaskDetailPanel";
 import { TaskQueueTable } from "../features/tasks/TaskQueueTable";
 import { WorkerJobsPanel } from "../features/workers/WorkerJobsPanel";
-import type { Agent, Approval, AuditLog, GitHubIssue, GitHubStatus, Task, WorkerJob } from "../types/domain";
+import type { Agent, Approval, AuditLog, GitHubIssue, GitHubStatus, LocalServicesStatus, Task, WorkerJob } from "../types/domain";
 
 export function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -25,11 +27,13 @@ export function App() {
   const [workerJobs, setWorkerJobs] = useState<WorkerJob[]>([]);
   const [githubIssues, setGithubIssues] = useState<GitHubIssue[]>([]);
   const [githubStatus, setGithubStatus] = useState<GitHubStatus | null>(null);
+  const [localServicesStatus, setLocalServicesStatus] = useState<LocalServicesStatus | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [paused, setPaused] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [loadingIssues, setLoadingIssues] = useState(false);
+  const [localServiceBusy, setLocalServiceBusy] = useState(false);
   const [toast, setToast] = useState("");
 
   async function refresh() {
@@ -40,7 +44,8 @@ export function App() {
       nextAuditLogs,
       nextWorkerJobs,
       nextGithubStatus,
-      nextGithubIssues
+      nextGithubIssues,
+      nextLocalServicesStatus
     ] = await Promise.all([
       fetchAgents(),
       fetchTasks(),
@@ -48,7 +53,8 @@ export function App() {
       fetchAuditLogs(),
       fetchWorkerJobs(),
       fetchGitHubStatus(),
-      fetchGitHubIssues("bug")
+      fetchGitHubIssues("bug"),
+      fetchLocalServicesStatus()
     ]);
     setAgents(nextAgents);
     setTasks(nextTasks);
@@ -57,6 +63,7 @@ export function App() {
     setWorkerJobs(nextWorkerJobs);
     setGithubStatus(nextGithubStatus);
     setGithubIssues(nextGithubIssues);
+    setLocalServicesStatus(nextLocalServicesStatus);
     if (selectedTaskId && !nextTasks.some((task) => task.id === selectedTaskId)) {
       setSelectedTaskId(null);
     }
@@ -149,6 +156,32 @@ export function App() {
     }
   }
 
+  async function handleStartWorkerService() {
+    setLocalServiceBusy(true);
+    try {
+      const nextStatus = await startWorkerService();
+      setLocalServicesStatus(nextStatus);
+      setToast("워커를 시작했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "워커 시작 실패");
+    } finally {
+      setLocalServiceBusy(false);
+    }
+  }
+
+  async function handleStopWorkerService() {
+    setLocalServiceBusy(true);
+    try {
+      const nextStatus = await stopWorkerService();
+      setLocalServicesStatus(nextStatus);
+      setToast("워커를 중지했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "워커 중지 실패");
+    } finally {
+      setLocalServiceBusy(false);
+    }
+  }
+
   return (
     <AppShell>
       <Topbar
@@ -177,7 +210,15 @@ export function App() {
 
       <section className="workspace-grid">
         <StaffPage agents={filtered.agents} onCreateAgent={handleCreateAgent} />
-        <GitHubSettingsPanel status={githubStatus} />
+        <aside className="side-stack">
+          <GitHubSettingsPanel status={githubStatus} />
+          <LocalServicesPanel
+            status={localServicesStatus}
+            busy={localServiceBusy}
+            onStartWorker={handleStartWorkerService}
+            onStopWorker={handleStopWorkerService}
+          />
+        </aside>
       </section>
 
       <IssueInboxPanel

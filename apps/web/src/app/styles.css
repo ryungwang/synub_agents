@@ -521,6 +521,21 @@ code {
   font-weight: 900;
 }
 
+.service-row-value,
+.service-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-row-value em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .inline-link {
   display: inline-flex;
   align-items: center;

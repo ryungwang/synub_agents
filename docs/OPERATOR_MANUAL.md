@@ -128,6 +128,10 @@ Codex worker가 가져갈 작업을 확인한다.
 
 ## 워커 실행
 
+대시보드가 켜져 있으면 `운영 제어 > 로컬 서비스`에서 `워커 시작`을 누른다.
+
+처음부터 API, 웹, 워커를 같이 켜려면 다음 명령을 사용한다.
+
 ```powershell
 .\infra\scripts\start-local.ps1 -WithWorker
 ```
