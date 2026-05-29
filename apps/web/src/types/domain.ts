@@ -90,6 +90,54 @@ export interface LocalServicesStatus {
   checkedAt: string;
 }
 
+export type CompanyUserRole = "ADMIN" | "PROJECT_LEAD" | "MEMBER";
+export type CompanyProjectStatus = "ACTIVE" | "PAUSED" | "ARCHIVED";
+export type ProjectMemberRole = "OWNER" | "LEAD" | "MEMBER" | "REVIEWER";
+export type ProjectWorkRequestType = "FEATURE" | "BUGFIX" | "REFACTOR" | "DESIGN" | "QA" | "DOCS" | "OPS";
+export type ProjectWorkRequestStatus = "SUBMITTED" | "QUEUED" | "RUNNING" | "DONE" | "REJECTED";
+
+export interface CompanyUser {
+  id: string;
+  displayName: string;
+  email: string | null;
+  role: CompanyUserRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CompanyProject {
+  id: number;
+  name: string;
+  repository: string;
+  workspacePath: string;
+  description: string | null;
+  status: CompanyProjectStatus;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface ProjectMember {
+  id: number;
+  projectId: number;
+  userId: string;
+  role: ProjectMemberRole;
+  createdAt: string;
+}
+
+export interface ProjectWorkRequest {
+  id: number;
+  projectId: number;
+  requesterId: string;
+  title: string;
+  description: string;
+  requestType: ProjectWorkRequestType;
+  priority: string;
+  riskLevel: TaskRiskLevel;
+  status: ProjectWorkRequestStatus;
+  taskId: number | null;
+  createdAt: string;
+}
+
 export interface AuditLog {
   id: number;
   actorType: string;

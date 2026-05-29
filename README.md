@@ -116,6 +116,18 @@ Recommended operation:
 4. Click `Sync codex-ready` to create a task for the worker.
 5. Worker runs Codex and opens a PR when it has a fix.
 
+## Central Workspace Mode
+
+`synub_agents` now also acts as the central workspace API for internal employees:
+
+- register employees
+- register projects
+- receive project work requests from `synub-teams-ai`
+- convert a work request into the existing task queue
+- let the central worker process the task and produce PRs/logs
+
+The employee desktop app should send normal project work to `/api/workspace/projects/{projectId}/work-requests`. Program bugs still go through GitHub Issues.
+
 ## Verified Locally
 
 - `gradle -p apps\api bootJar test`

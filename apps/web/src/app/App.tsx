@@ -5,6 +5,18 @@ import { fetchAuditLogs } from "../api/auditApi";
 import { fetchGitHubIssues, fetchGitHubStatus, syncReadyIssues } from "../api/githubApi";
 import { fetchLocalServicesStatus, startWorkerService, stopWorkerService } from "../api/localServicesApi";
 import { createWorkerJob, fetchTasks } from "../api/tasksApi";
+import {
+  createCompanyProject,
+  createCompanyUser,
+  createProjectWorkRequest,
+  createTaskFromWorkRequest,
+  fetchCompanyProjects,
+  fetchCompanyUsers,
+  fetchProjectWorkRequests,
+  type CreateCompanyProjectPayload,
+  type CreateCompanyUserPayload,
+  type CreateProjectWorkRequestPayload
+} from "../api/workspaceApi";
 import { fetchWorkerJobs } from "../api/workerJobsApi";
 import { AppShell } from "../components/layout/AppShell";
 import { Topbar } from "../components/layout/Topbar";
@@ -17,7 +29,20 @@ import { LocalServicesPanel } from "../features/operations/LocalServicesPanel";
 import { TaskDetailPanel } from "../features/tasks/TaskDetailPanel";
 import { TaskQueueTable } from "../features/tasks/TaskQueueTable";
 import { WorkerJobsPanel } from "../features/workers/WorkerJobsPanel";
-import type { Agent, Approval, AuditLog, GitHubIssue, GitHubStatus, LocalServicesStatus, Task, WorkerJob } from "../types/domain";
+import { WorkspaceAdminPanel } from "../features/workspace/WorkspaceAdminPanel";
+import type {
+  Agent,
+  Approval,
+  AuditLog,
+  CompanyProject,
+  CompanyUser,
+  GitHubIssue,
+  GitHubStatus,
+  LocalServicesStatus,
+  ProjectWorkRequest,
+  Task,
+  WorkerJob
+} from "../types/domain";
 
 export function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -28,6 +53,9 @@ export function App() {
   const [githubIssues, setGithubIssues] = useState<GitHubIssue[]>([]);
   const [githubStatus, setGithubStatus] = useState<GitHubStatus | null>(null);
   const [localServicesStatus, setLocalServicesStatus] = useState<LocalServicesStatus | null>(null);
+  const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
+  const [companyProjects, setCompanyProjects] = useState<CompanyProject[]>([]);
+  const [projectWorkRequests, setProjectWorkRequests] = useState<ProjectWorkRequest[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [paused, setPaused] = useState(false);
@@ -45,7 +73,10 @@ export function App() {
       nextWorkerJobs,
       nextGithubStatus,
       nextGithubIssues,
-      nextLocalServicesStatus
+      nextLocalServicesStatus,
+      nextCompanyUsers,
+      nextCompanyProjects,
+      nextProjectWorkRequests
     ] = await Promise.all([
       fetchAgents(),
       fetchTasks(),
@@ -54,7 +85,10 @@ export function App() {
       fetchWorkerJobs(),
       fetchGitHubStatus(),
       fetchGitHubIssues("bug"),
-      fetchLocalServicesStatus()
+      fetchLocalServicesStatus(),
+      fetchCompanyUsers(),
+      fetchCompanyProjects(),
+      fetchProjectWorkRequests()
     ]);
     setAgents(nextAgents);
     setTasks(nextTasks);
@@ -64,6 +98,9 @@ export function App() {
     setGithubStatus(nextGithubStatus);
     setGithubIssues(nextGithubIssues);
     setLocalServicesStatus(nextLocalServicesStatus);
+    setCompanyUsers(nextCompanyUsers);
+    setCompanyProjects(nextCompanyProjects);
+    setProjectWorkRequests(nextProjectWorkRequests);
     if (selectedTaskId && !nextTasks.some((task) => task.id === selectedTaskId)) {
       setSelectedTaskId(null);
     }
@@ -182,6 +219,46 @@ export function App() {
     }
   }
 
+  async function handleCreateCompanyUser(payload: CreateCompanyUserPayload) {
+    try {
+      await createCompanyUser(payload);
+      await refresh();
+      setToast("직원을 등록했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "직원 등록 실패");
+    }
+  }
+
+  async function handleCreateCompanyProject(payload: CreateCompanyProjectPayload) {
+    try {
+      await createCompanyProject(payload);
+      await refresh();
+      setToast("프로젝트를 등록했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "프로젝트 등록 실패");
+    }
+  }
+
+  async function handleCreateProjectWorkRequest(projectId: number, payload: CreateProjectWorkRequestPayload) {
+    try {
+      await createProjectWorkRequest(projectId, payload);
+      await refresh();
+      setToast("작업 요청을 등록했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "작업 요청 등록 실패");
+    }
+  }
+
+  async function handleQueueWorkRequest(requestId: number) {
+    try {
+      await createTaskFromWorkRequest(requestId);
+      await refresh();
+      setToast("작업 요청을 중앙 작업 큐로 전환했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "작업 큐 전환 실패");
+    }
+  }
+
   return (
     <AppShell>
       <Topbar
@@ -220,6 +297,16 @@ export function App() {
           />
         </aside>
       </section>
+
+      <WorkspaceAdminPanel
+        users={companyUsers}
+        projects={companyProjects}
+        workRequests={projectWorkRequests}
+        onCreateUser={handleCreateCompanyUser}
+        onCreateProject={handleCreateCompanyProject}
+        onCreateWorkRequest={handleCreateProjectWorkRequest}
+        onQueueWorkRequest={handleQueueWorkRequest}
+      />
 
       <IssueInboxPanel
         issues={filtered.githubIssues}
