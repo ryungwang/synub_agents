@@ -5,6 +5,7 @@ import type { GitHubStatus } from "../../types/domain";
 
 export function GitHubSettingsPanel({ status }: { status: GitHubStatus | null }) {
   const reachable = status?.reachable ?? false;
+  const unavailable = status == null;
   return (
     <section className="panel" id="settings">
       <div className="panel-heading">
@@ -15,13 +16,13 @@ export function GitHubSettingsPanel({ status }: { status: GitHubStatus | null })
         {reachable ? <CheckCircle2 size={20} color="#1f9d72" /> : <XCircle size={20} color="#c74747" />}
       </div>
       <div className="settings-list">
-        <Row label="저장소" value={status?.repository || "설정되지 않음"} />
+        <Row label="저장소" value={unavailable ? "상태 확인 실패" : status.repository || "설정되지 않음"} />
         <Row label="준비 라벨" value={status?.readyLabel || "codex-ready"} />
-        <Row label="토큰" value={status?.tokenConfigured ? "설정됨" : "없음"} />
-        <Row label="연결 상태" value={status?.message ? connectionMessageLabel(status.message) : "확인 전"} />
+        <Row label="토큰" value={unavailable ? "확인 실패" : status.tokenConfigured ? "설정됨" : "없음"} />
+        <Row label="연결 상태" value={status?.message ? connectionMessageLabel(status.message) : "관리자 인증 또는 API 상태 확인 필요"} />
       </div>
       <div className="meta-row">
-        <StatusBadge tone={reachable ? "good" : "danger"}>{reachable ? "연결됨" : "준비 필요"}</StatusBadge>
+        <StatusBadge tone={reachable ? "good" : "danger"}>{reachable ? "연결됨" : unavailable ? "확인 실패" : "준비 필요"}</StatusBadge>
       </div>
     </section>
   );

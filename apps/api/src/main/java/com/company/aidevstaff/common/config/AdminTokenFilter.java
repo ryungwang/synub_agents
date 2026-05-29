@@ -56,6 +56,9 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/workspace/projects") && "GET".equalsIgnoreCase(method)) {
             return false;
         }
+        if (path.startsWith("/api/workspace/users/") && path.endsWith("/license") && "GET".equalsIgnoreCase(method)) {
+            return false;
+        }
         if (path.startsWith("/api/workspace/projects/") && path.endsWith("/work-requests")) {
             return false;
         }

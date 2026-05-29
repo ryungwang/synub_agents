@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Profile("local")
+@Profile({"local", "local-postgres"})
 @RequestMapping("/api/local-services")
 public class LocalServiceController {
     private final LocalServiceControlService service;

@@ -19,6 +19,11 @@ public class CompanyUser {
     private CompanyUserRole role;
 
     private boolean active;
+
+    @Enumerated(EnumType.STRING)
+    private CompanyUserLicenseStatus licenseStatus;
+
+    private OffsetDateTime licenseAssignedAt;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -32,8 +37,20 @@ public class CompanyUser {
         this.email = email == null || email.isBlank() ? null : email.trim();
         this.role = role;
         this.active = true;
+        this.licenseStatus = CompanyUserLicenseStatus.UNASSIGNED;
         this.createdAt = now;
         this.updatedAt = now;
+    }
+
+    public void grantLicense() {
+        this.licenseStatus = CompanyUserLicenseStatus.ACTIVE;
+        this.licenseAssignedAt = OffsetDateTime.now();
+        this.updatedAt = this.licenseAssignedAt;
+    }
+
+    public void revokeLicense() {
+        this.licenseStatus = CompanyUserLicenseStatus.REVOKED;
+        this.updatedAt = OffsetDateTime.now();
     }
 
     public String getId() { return id; }
@@ -41,6 +58,8 @@ public class CompanyUser {
     public String getEmail() { return email; }
     public CompanyUserRole getRole() { return role; }
     public boolean isActive() { return active; }
+    public CompanyUserLicenseStatus getLicenseStatus() { return licenseStatus; }
+    public OffsetDateTime getLicenseAssignedAt() { return licenseAssignedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

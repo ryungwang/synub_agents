@@ -14,7 +14,7 @@ if (Test-Path $jdk) {
   $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 }
 
-$jar = Join-Path $root "apps\api\build\libs\ai-dev-staff-api-0.1.0.jar"
+$jar = Join-Path $root "apps\api\build\libs\synub-agents-api-0.1.0.jar"
 Push-Location $root
 try {
   .\gradlew.bat -p apps\api bootJar

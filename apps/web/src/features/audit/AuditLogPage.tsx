@@ -12,11 +12,15 @@ export function AuditLogPage({ logs }: { logs: AuditLog[] }) {
       <div className="audit-list">
         {logs.map((log) => (
           <article className="audit-row" key={log.id}>
-            <span>{new Date(log.createdAt).toLocaleString("ko-KR")}</span>
-            <strong>{log.actorType}</strong>
-            <span>{log.action}</span>
-            <code>{log.targetType}:{log.targetId}</code>
-            <em>{log.metadataJson}</em>
+            <div className="audit-main">
+              <span>{new Date(log.createdAt).toLocaleString("ko-KR")}</span>
+              <strong>{log.actorType}</strong>
+              <span>{log.action}</span>
+            </div>
+            <div className="audit-meta">
+              <code>{log.targetType}:{log.targetId}</code>
+              <em>{log.metadataJson}</em>
+            </div>
           </article>
         ))}
       </div>

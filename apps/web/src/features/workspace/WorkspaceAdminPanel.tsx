@@ -1,9 +1,8 @@
-import { BriefcaseBusiness, Plus, Send, ShieldCheck } from "lucide-react";
+import { BriefcaseBusiness, Send, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   type AddProjectMemberPayload,
   type CreateCompanyProjectPayload,
-  type CreateCompanyUserPayload,
   type CreateProjectWorkRequestPayload
 } from "../../api/workspaceApi";
 import { statusLabel } from "../../app/labels";
@@ -13,7 +12,6 @@ import type {
   AuditLog,
   CompanyProject,
   CompanyUser,
-  CompanyUserRole,
   ProjectMember,
   ProjectMemberRole,
   ProjectWorkRequest,
@@ -29,7 +27,6 @@ interface WorkspaceAdminPanelProps {
   workRequests: ProjectWorkRequest[];
   workerJobs: WorkerJob[];
   auditLogs: AuditLog[];
-  onCreateUser: (payload: CreateCompanyUserPayload) => Promise<void>;
   onCreateProject: (payload: CreateCompanyProjectPayload) => Promise<void>;
   onAddProjectMember: (projectId: number, payload: AddProjectMemberPayload) => Promise<void>;
   onCreateWorkRequest: (projectId: number, payload: CreateProjectWorkRequestPayload) => Promise<void>;
@@ -43,19 +40,12 @@ export function WorkspaceAdminPanel({
   workRequests,
   workerJobs,
   auditLogs,
-  onCreateUser,
   onCreateProject,
   onAddProjectMember,
   onCreateWorkRequest,
   onQueueWorkRequest
 }: WorkspaceAdminPanelProps) {
   const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [userForm, setUserForm] = useState<{ id: string; displayName: string; email: string; role: CompanyUserRole }>({
-    id: "",
-    displayName: "",
-    email: "",
-    role: "MEMBER"
-  });
   const [projectForm, setProjectForm] = useState({
     name: "",
     repository: "ryungwang/synub-teams-ai",
@@ -111,6 +101,8 @@ export function WorkspaceAdminPanel({
     () => workRequests.filter((request) => !selectedProjectId || String(request.projectId) === selectedProjectId).slice(0, 8),
     [selectedProjectId, workRequests]
   );
+  const queueableRequests = useMemo(() => selectedRequests.filter((request) => !request.taskId), [selectedRequests]);
+  const convertedRequests = useMemo(() => selectedRequests.filter((request) => Boolean(request.taskId)), [selectedRequests]);
   const selectedJobs = useMemo(() => {
     const taskIds = new Set(selectedRequests.map((request) => request.taskId).filter(Boolean));
     return workerJobs.filter((job) => taskIds.has(job.taskId)).slice(0, 5);
@@ -119,17 +111,6 @@ export function WorkspaceAdminPanel({
     () => auditLogs.filter((log) => ["TASK", "WORKER_JOB", "APPROVAL"].includes(log.targetType)).slice(0, 6),
     [auditLogs]
   );
-
-  async function submitUser(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting("user");
-    try {
-      await onCreateUser({ ...userForm, id: userForm.id.trim().toLowerCase() });
-      setUserForm({ id: "", displayName: "", email: "", role: "MEMBER" });
-    } finally {
-      setSubmitting("");
-    }
-  }
 
   async function submitProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -216,22 +197,6 @@ export function WorkspaceAdminPanel({
       </div>
 
       <div className="workspace-admin-grid">
-        <form className="compact-form" onSubmit={submitUser}>
-          <strong>직원 등록</strong>
-          <input value={userForm.id} onChange={(event) => setUserForm((value) => ({ ...value, id: event.target.value }))} placeholder="직원 ID" required />
-          <input value={userForm.displayName} onChange={(event) => setUserForm((value) => ({ ...value, displayName: event.target.value }))} placeholder="이름" required />
-          <input value={userForm.email} onChange={(event) => setUserForm((value) => ({ ...value, email: event.target.value }))} placeholder="이메일" />
-          <select value={userForm.role} onChange={(event) => setUserForm((value) => ({ ...value, role: event.target.value as CompanyUserRole }))}>
-            <option value="MEMBER">직원</option>
-            <option value="PROJECT_LEAD">프로젝트 리더</option>
-            <option value="ADMIN">운영자</option>
-          </select>
-          <button className="primary-button" type="submit" disabled={submitting === "user"}>
-            <Plus size={16} />
-            등록
-          </button>
-        </form>
-
         <form className="compact-form" onSubmit={submitProject}>
           <strong>프로젝트 등록</strong>
           <input value={projectForm.name} onChange={(event) => setProjectForm((value) => ({ ...value, name: event.target.value }))} placeholder="프로젝트명" required />
@@ -321,36 +286,29 @@ export function WorkspaceAdminPanel({
         <section className="workspace-subpanel">
           <div className="subpanel-heading">
             <strong>작업 요청 관리</strong>
-            <span>{selectedRequests.length}건</span>
+            <span>{queueableRequests.length}건</span>
           </div>
           <div className="table-list">
-            {selectedRequests.length === 0 ? (
-              <EmptyState>선택한 프로젝트의 작업 요청이 없습니다.</EmptyState>
+            {queueableRequests.length === 0 ? (
+              <EmptyState>{selectedRequests.length === 0 ? "선택한 프로젝트의 작업 요청이 없습니다." : "중앙 작업으로 전환할 요청이 없습니다."}</EmptyState>
             ) : (
-              selectedRequests.map((request) => (
-                <article className="work-item compact-item" key={request.id}>
-                  <div className="item-title">
-                    <strong>{request.title}</strong>
-                    <StatusBadge tone={statusTone(request.taskStatus ?? request.status)}>{statusLabel(request.taskStatus ?? request.status)}</StatusBadge>
-                  </div>
-                  <p className="line-clamp">{request.description}</p>
-                  <div className="meta-row">
-                    <span>요청자 {request.requesterId}</span>
-                    <span>작업 {request.taskId ?? "-"}</span>
-                    <span>{request.requestType}</span>
-                    {request.prUrl && (
-                      <a className="inline-link" href={request.prUrl} target="_blank" rel="noreferrer">
-                        PR 열기
-                      </a>
-                    )}
-                  </div>
-                  <button className="ghost-button" type="button" onClick={() => onQueueWorkRequest(request.id)} disabled={Boolean(request.taskId)}>
-                    중앙 작업으로 전환
-                  </button>
-                </article>
-              ))
+              queueableRequests.map((request) => renderWorkRequestRow({ request, onQueueWorkRequest }))
             )}
           </div>
+          {convertedRequests.length > 0 && (
+            <section className="blocked-task-section">
+              <div className="subpanel-heading">
+                <div>
+                  <p className="eyebrow">전환 완료</p>
+                  <h3>이미 중앙 작업으로 전환된 요청</h3>
+                </div>
+                <span>{convertedRequests.length}건</span>
+              </div>
+              <div className="table-list">
+                {convertedRequests.map((request) => renderWorkRequestRow({ request, onQueueWorkRequest }))}
+              </div>
+            </section>
+          )}
         </section>
 
         <section className="workspace-subpanel">
@@ -387,13 +345,17 @@ export function WorkspaceAdminPanel({
             ) : (
               workspaceLogs.map((log) => (
                 <article className="audit-row compact-audit-row" key={log.id}>
-                  <span>{new Date(log.createdAt).toLocaleString("ko-KR")}</span>
-                  <strong>{log.actorType}</strong>
-                  <span>{log.action}</span>
-                  <code>
-                    {log.targetType}:{log.targetId}
-                  </code>
-                  <em>{log.metadataJson}</em>
+                  <div className="audit-main">
+                    <span>{new Date(log.createdAt).toLocaleString("ko-KR")}</span>
+                    <strong>{log.actorType}</strong>
+                    <span>{log.action}</span>
+                  </div>
+                  <div className="audit-meta">
+                    <code>
+                      {log.targetType}:{log.targetId}
+                    </code>
+                    <em>{log.metadataJson}</em>
+                  </div>
                 </article>
               ))
             )}
@@ -401,5 +363,41 @@ export function WorkspaceAdminPanel({
         </section>
       </div>
     </section>
+  );
+}
+
+function renderWorkRequestRow({
+  request,
+  onQueueWorkRequest
+}: {
+  request: ProjectWorkRequest;
+  onQueueWorkRequest: (requestId: number) => Promise<void>;
+}) {
+  const converted = Boolean(request.taskId);
+  return (
+    <article className={`work-item compact-item ${converted ? "blocked-work-row" : ""}`} key={request.id}>
+      <div className="item-title">
+        <strong>{request.title}</strong>
+        <StatusBadge tone={statusTone(request.taskStatus ?? request.status)}>{statusLabel(request.taskStatus ?? request.status)}</StatusBadge>
+      </div>
+      <p className="line-clamp">{request.description}</p>
+      <div className="meta-row">
+        <span>요청자 {request.requesterId}</span>
+        <span>작업 {request.taskId ?? "-"}</span>
+        <span>{request.requestType}</span>
+        {request.prUrl && (
+          <a className="inline-link" href={request.prUrl} target="_blank" rel="noreferrer">
+            PR 열기
+          </a>
+        )}
+      </div>
+      {converted ? (
+        <p className="row-blocked-reason">이미 중앙 작업으로 전환됨</p>
+      ) : (
+        <button className="ghost-button" type="button" onClick={() => onQueueWorkRequest(request.id)}>
+          중앙 작업으로 전환
+        </button>
+      )}
+    </article>
   );
 }

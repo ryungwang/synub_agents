@@ -47,6 +47,14 @@ export function createCompanyUser(payload: CreateCompanyUserPayload) {
   return http<CompanyUser>("/api/workspace/users", { method: "POST", body: JSON.stringify(payload) });
 }
 
+export function grantCompanyUserLicense(userId: string) {
+  return http<CompanyUser>(`/api/workspace/users/${encodeURIComponent(userId)}/license/grant`, { method: "POST" });
+}
+
+export function revokeCompanyUserLicense(userId: string) {
+  return http<CompanyUser>(`/api/workspace/users/${encodeURIComponent(userId)}/license/revoke`, { method: "POST" });
+}
+
 export function fetchCompanyProjects() {
   return http<CompanyProject[]>("/api/workspace/projects");
 }

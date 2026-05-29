@@ -8,3 +8,7 @@ export function fetchTasks() {
 export function createWorkerJob(taskId: number) {
   return http<WorkerJob>(`/api/worker-jobs/tasks/${taskId}`, { method: "POST" });
 }
+
+export function retryWorkerJob(taskId: number) {
+  return http<WorkerJob>(`/api/worker-jobs/tasks/${taskId}/retry`, { method: "POST" });
+}

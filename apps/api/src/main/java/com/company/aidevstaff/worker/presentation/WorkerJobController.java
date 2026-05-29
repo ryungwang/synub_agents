@@ -38,6 +38,11 @@ public class WorkerJobController {
         return WorkerJobResponse.from(workerJobService.createForTask(taskId));
     }
 
+    @PostMapping("/tasks/{taskId}/retry")
+    public WorkerJobResponse retry(@PathVariable Long taskId) {
+        return WorkerJobResponse.from(workerJobService.retryTask(taskId));
+    }
+
     @PostMapping("/claim-next")
     public WorkerJobResponse claimNext() {
         return WorkerJobResponse.from(workerJobService.claimNext());

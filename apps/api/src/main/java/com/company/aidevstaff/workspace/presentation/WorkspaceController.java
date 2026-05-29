@@ -37,6 +37,21 @@ public class WorkspaceController {
         return CompanyUserResponse.from(workspaceService.createUser(request.id(), request.displayName(), request.email(), request.role()));
     }
 
+    @GetMapping("/users/{userId}/license")
+    public CompanyUserLicenseResponse checkUserLicense(@PathVariable String userId) {
+        return CompanyUserLicenseResponse.from(workspaceService.findUser(userId));
+    }
+
+    @PostMapping("/users/{userId}/license/grant")
+    public CompanyUserResponse grantUserLicense(@PathVariable String userId) {
+        return CompanyUserResponse.from(workspaceService.grantUserLicense(userId));
+    }
+
+    @PostMapping("/users/{userId}/license/revoke")
+    public CompanyUserResponse revokeUserLicense(@PathVariable String userId) {
+        return CompanyUserResponse.from(workspaceService.revokeUserLicense(userId));
+    }
+
     @GetMapping("/projects")
     public List<CompanyProjectResponse> findProjects() {
         return workspaceService.findProjects().stream().map(CompanyProjectResponse::from).toList();

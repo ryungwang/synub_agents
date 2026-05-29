@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16
-    container_name: ai-dev-staff-postgres
+    container_name: synub-agents-postgres
     environment:
-      POSTGRES_DB: ai_dev_staff
-      POSTGRES_USER: ai_dev_staff
-      POSTGRES_PASSWORD: ai_dev_staff
+      POSTGRES_DB: synub_agents
+      POSTGRES_USER: synub_agents
+      POSTGRES_PASSWORD: synub_agents
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ai_dev_staff -d ai_dev_staff"]
+      test: ["CMD-SHELL", "pg_isready -U synub_agents -d synub_agents"]
       interval: 5s
       timeout: 5s
       retries: 10

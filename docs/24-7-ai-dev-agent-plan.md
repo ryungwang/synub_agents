@@ -869,7 +869,7 @@ Scheduler:    Spring Boot 내부 실행
 초기 환경변수:
 
 ```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_dev_staff
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/synub_agents
 SPRING_DATASOURCE_USERNAME=
 SPRING_DATASOURCE_PASSWORD=
 

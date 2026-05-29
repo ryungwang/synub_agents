@@ -3,6 +3,7 @@ package com.company.aidevstaff.common.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -16,6 +17,10 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable());
         http.cors(Customizer.withDefaults());
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.formLogin(form -> form.disable());
+        http.httpBasic(basic -> basic.disable());
+        http.logout(logout -> logout.disable());
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/api/**").permitAll()
                 .anyRequest().authenticated());

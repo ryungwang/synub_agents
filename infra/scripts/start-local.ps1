@@ -1,4 +1,5 @@
 param(
+  [switch]$Postgres,
   [switch]$WithWorker
 )
 
@@ -61,9 +62,19 @@ function Start-LocalProcess {
 }
 
 Write-Host "Starting Synub Agents local services..."
-Write-Host "Local mode uses the H2 file database. No PostgreSQL or Docker is required."
+if ($Postgres) {
+  Write-Host "Local mode uses PostgreSQL from infra\docker\docker-compose.local.yml."
+} else {
+  Write-Host "Local mode uses the H2 file database. No PostgreSQL or Docker is required."
+}
 
-Start-LocalProcess "api" (Join-Path $PSScriptRoot "start-api-local.ps1") 8080
+$apiScript = if ($Postgres) {
+  Join-Path $PSScriptRoot "start-api-local-postgres.ps1"
+} else {
+  Join-Path $PSScriptRoot "start-api-local.ps1"
+}
+
+Start-LocalProcess "api" $apiScript 8080
 Start-LocalProcess "web" (Join-Path $PSScriptRoot "start-web-local.ps1") 3002
 
 if ($WithWorker) {

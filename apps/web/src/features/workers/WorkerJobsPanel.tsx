@@ -12,18 +12,21 @@ export function WorkerJobsPanel({ jobs }: { jobs: WorkerJob[] }) {
           <h2>실행 이력</h2>
         </div>
       </div>
-      <div className="table-list">
+      <div className="table-list work-table compact-work-table">
         {jobs.length === 0 ? (
           <EmptyState>생성된 작업 실행이 없습니다.</EmptyState>
         ) : (
           jobs.slice(0, 8).map((job) => (
-            <article className="work-item" key={job.id}>
-              <div className="item-title">
-                <strong>실행 {job.id} / 작업 {job.taskId}</strong>
+            <article className="work-item work-row" key={job.id}>
+              <div className="work-index">{job.id}</div>
+              <div className="work-row-main">
+                <strong>작업 {job.taskId}</strong>
+                <code>{job.pullRequestUrl ?? job.resultBranch ?? job.command}</code>
+                {job.errorMessage && <p className="danger-text">{job.errorMessage}</p>}
+              </div>
+              <div className="work-row-side">
                 <StatusBadge tone={statusTone(job.status)}>{statusLabel(job.status)}</StatusBadge>
               </div>
-              <code>{job.pullRequestUrl ?? job.resultBranch ?? job.command}</code>
-              {job.errorMessage && <p className="danger-text">{job.errorMessage}</p>}
             </article>
           ))
         )}

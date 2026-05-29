@@ -3,11 +3,11 @@ server:
 
 spring:
   application:
-    name: ai-dev-staff-api
+    name: synub-agents-api
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ai_dev_staff}
-    username: ${SPRING_DATASOURCE_USERNAME:ai_dev_staff}
-    password: ${SPRING_DATASOURCE_PASSWORD:ai_dev_staff}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/synub_agents}
+    username: ${SPRING_DATASOURCE_USERNAME:synub_agents}
+    password: ${SPRING_DATASOURCE_PASSWORD:synub_agents}
   jpa:
     hibernate:
       ddl-auto: validate

@@ -73,6 +73,11 @@ public class Task {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public void markRetryQueued() {
+        this.status = TaskStatus.WORKER_JOB_CREATED;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public void markRunning() {
         this.status = TaskStatus.RUNNING;
         this.updatedAt = OffsetDateTime.now();

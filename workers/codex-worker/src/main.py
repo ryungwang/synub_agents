@@ -7,7 +7,7 @@ from jobs.job_loop import run_loop
 
 def main() -> None:
     settings = load_settings()
-    client = SpringClient(settings.api_base_url, settings.worker_secret)
+    client = SpringClient(settings.api_base_url, settings.worker_secret, settings.admin_token)
     run_loop(client, settings)
 
 

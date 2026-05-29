@@ -46,6 +46,14 @@ $env:WORKER_SECRET='change-this'
 
 ## API 실행
 
+### 윈도우 실행 체크리스트
+
+1. `.env` 파일이 있는지 확인한다.
+2. H2 기준 실행은 `.\infra\scripts\start-local.ps1`을 사용한다.
+3. PostgreSQL 기준 실행은 `.\infra\scripts\start-local.ps1 -Postgres`를 사용한다.
+4. 워커까지 같이 켜려면 `-WithWorker`를 추가한다.
+5. 중지는 `.\infra\scripts\stop-local.ps1`을 사용한다.
+
 로컬 H2 기준 실행:
 
 ```powershell
@@ -53,6 +61,63 @@ $env:WORKER_SECRET='change-this'
 ```
 
 이 명령은 API와 웹 대시보드를 백그라운드로 실행한다. 로그는 `.run\logs`에 저장된다.
+
+로컬 PostgreSQL 기준 실행:
+
+```powershell
+.\infra\scripts\start-local.ps1 -Postgres
+```
+
+PostgreSQL 모드는 `infra\docker\docker-compose.local.yml`의 `postgres` 컨테이너를 실행하고, API를 `local-postgres` Spring 프로필로 띄운다. 기본 접속 정보는 다음과 같다.
+
+```text
+jdbc:postgresql://localhost:5432/synub_agents
+username: synub_agents
+password: synub_agents
+```
+
+API만 PostgreSQL로 직접 실행하려면 다음 명령을 사용한다.
+
+```powershell
+.\infra\scripts\start-api-local-postgres.ps1
+```
+
+### 맥/리눅스 실행 체크리스트
+
+1. `.env` 파일이 있는지 확인한다.
+2. 스크립트 실행 권한이 없으면 `chmod +x infra/scripts/*.sh`를 실행한다.
+3. H2 기준 실행은 `./infra/scripts/start-local.sh`를 사용한다.
+4. PostgreSQL 기준 실행은 `./infra/scripts/start-local.sh --postgres`를 사용한다.
+5. 워커까지 같이 켜려면 `--with-worker`를 추가한다.
+6. 중지는 `./infra/scripts/stop-local.sh`를 사용한다.
+
+로컬 H2 기준 실행:
+
+```bash
+./infra/scripts/start-local.sh
+```
+
+로컬 PostgreSQL 기준 실행:
+
+```bash
+./infra/scripts/start-local.sh --postgres
+```
+
+API만 PostgreSQL로 직접 실행하려면 다음 명령을 사용한다.
+
+```bash
+./infra/scripts/start-api-local-postgres.sh
+```
+
+Docker가 아니라 이미 설치된 로컬 PostgreSQL을 쓰는 경우에는 먼저 DB와 계정을 만든다.
+
+```sql
+CREATE USER synub_agents WITH PASSWORD 'synub_agents';
+CREATE DATABASE synub_agents OWNER synub_agents;
+GRANT ALL PRIVILEGES ON DATABASE synub_agents TO synub_agents;
+```
+
+이미 다른 PostgreSQL 컨테이너나 로컬 PostgreSQL이 `5432` 포트를 사용 중이면 `start-api-local-postgres.ps1`은 compose PostgreSQL을 새로 띄우지 않고 기존 서버를 사용한다.
 
 상태 확인:
 
@@ -132,8 +197,30 @@ Codex worker가 가져갈 작업을 확인한다.
 
 처음부터 API, 웹, 워커를 같이 켜려면 다음 명령을 사용한다.
 
+윈도우:
+
 ```powershell
 .\infra\scripts\start-local.ps1 -WithWorker
+```
+
+맥/리눅스:
+
+```bash
+./infra/scripts/start-local.sh --with-worker
+```
+
+PostgreSQL 모드에서 워커까지 같이 켜려면 다음 명령을 사용한다.
+
+윈도우:
+
+```powershell
+.\infra\scripts\start-local.ps1 -Postgres -WithWorker
+```
+
+맥/리눅스:
+
+```bash
+./infra/scripts/start-local.sh --postgres --with-worker
 ```
 
 워커는 `WORKER_SECRET`을 사용해 API에 접근한다. API와 워커의 secret 값이 다르면 작업을 가져오지 못한다.

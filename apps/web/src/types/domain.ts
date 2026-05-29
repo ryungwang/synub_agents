@@ -91,6 +91,7 @@ export interface LocalServicesStatus {
 }
 
 export type CompanyUserRole = "ADMIN" | "PROJECT_LEAD" | "MEMBER";
+export type CompanyUserLicenseStatus = "UNASSIGNED" | "ACTIVE" | "REVOKED";
 export type CompanyProjectStatus = "ACTIVE" | "PAUSED" | "ARCHIVED";
 export type ProjectMemberRole = "OWNER" | "LEAD" | "MEMBER" | "REVIEWER";
 export type ProjectWorkRequestType = "FEATURE" | "BUGFIX" | "REFACTOR" | "DESIGN" | "QA" | "DOCS" | "OPS";
@@ -101,6 +102,8 @@ export interface CompanyUser {
   displayName: string;
   email: string | null;
   role: CompanyUserRole;
+  licenseStatus: CompanyUserLicenseStatus;
+  licenseAssignedAt: string | null;
   active: boolean;
   createdAt: string;
 }

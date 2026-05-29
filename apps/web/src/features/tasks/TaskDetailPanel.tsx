@@ -26,7 +26,7 @@ export function TaskDetailPanel({ task, workerJobs }: { task: Task | null; worke
         <StatusBadge tone={statusTone(task.status)}>{statusLabel(task.status)}</StatusBadge>
       </div>
       <div className="detail-stack">
-        <p>{task.description || "설명 없음"}</p>
+        <p className="detail-description">{task.description || "설명 없음"}</p>
         <div className="meta-row">
           <StatusBadge tone={riskTone(task.riskLevel)}>{riskLabel(task.riskLevel)}</StatusBadge>
           <span>{task.repository}</span>
@@ -56,7 +56,7 @@ export function TaskDetailPanel({ task, workerJobs }: { task: Task | null; worke
                     <strong>실행 {job.id}</strong>
                     <StatusBadge tone={statusTone(job.status)}>{statusLabel(job.status)}</StatusBadge>
                   </div>
-                  <code>{job.resultBranch ?? job.command}</code>
+                  <code className="job-command">{job.resultBranch ?? job.command}</code>
                   {job.errorMessage && <p className="danger-text">{job.errorMessage}</p>}
                 </article>
               ))}

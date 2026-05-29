@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("local")
+@Profile({"local", "local-postgres"})
 public class LocalServiceControlService {
     private final Path root = Path.of("").toAbsolutePath().normalize();
     private final Path runDir = root.resolve(".run");
@@ -34,17 +35,16 @@ public class LocalServiceControlService {
 
         try {
             Files.createDirectories(logDir);
-            Path script = root.resolve("infra").resolve("scripts").resolve("start-worker-local.ps1");
+            boolean windows = isWindows();
+            Path script = root.resolve("infra").resolve("scripts").resolve(windows ? "start-worker-local.ps1" : "start-worker-local.sh");
             Path stdout = logDir.resolve("worker.out.log");
             Path stderr = logDir.resolve("worker.err.log");
-            Process process = new ProcessBuilder(
-                    "powershell",
-                    "-NoProfile",
-                    "-ExecutionPolicy",
-                    "Bypass",
-                    "-File",
-                    script.toString()
-            )
+
+            ProcessBuilder processBuilder = windows
+                    ? new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.toString())
+                    : new ProcessBuilder("bash", script.toString());
+
+            Process process = processBuilder
                     .directory(root.toFile())
                     .redirectOutput(stdout.toFile())
                     .redirectError(stderr.toFile())
@@ -65,7 +65,11 @@ public class LocalServiceControlService {
         }
 
         try {
-            new ProcessBuilder("taskkill", "/PID", Long.toString(worker.pid()), "/T", "/F")
+            ProcessBuilder processBuilder = isWindows()
+                    ? new ProcessBuilder("taskkill", "/PID", Long.toString(worker.pid()), "/T", "/F")
+                    : new ProcessBuilder("kill", Long.toString(worker.pid()));
+
+            processBuilder
                     .redirectErrorStream(true)
                     .start()
                     .waitFor();
@@ -122,12 +126,15 @@ public class LocalServiceControlService {
 
     private boolean isPortListening(int port) {
         try {
-            Process process = new ProcessBuilder(
-                    "powershell",
-                    "-NoProfile",
-                    "-Command",
-                    "if (Get-NetTCPConnection -LocalPort " + port + " -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
-            )
+            ProcessBuilder processBuilder = isWindows()
+                    ? new ProcessBuilder(
+                            "powershell",
+                            "-NoProfile",
+                            "-Command",
+                            "if (Get-NetTCPConnection -LocalPort " + port + " -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }")
+                    : new ProcessBuilder("bash", "-lc", "lsof -iTCP:" + port + " -sTCP:LISTEN -Pn >/dev/null 2>&1");
+
+            Process process = processBuilder
                     .redirectErrorStream(true)
                     .start();
             return process.waitFor() == 0;
@@ -137,6 +144,10 @@ public class LocalServiceControlService {
             Thread.currentThread().interrupt();
             return false;
         }
+    }
+
+    private boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
     }
 
     public record LocalServicesStatus(

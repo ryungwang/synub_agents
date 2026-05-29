@@ -160,7 +160,7 @@ WORKER_SECRET=충분히_긴_랜덤값
 ```powershell
 $env:JAVA_HOME='C:\Users\User\.jdks\ms-21.0.11'
 $env:Path="$env:JAVA_HOME\bin;$env:Path"
-java -jar apps\api\build\libs\ai-dev-staff-api-0.1.0.jar --spring.profiles.active=local
+java -jar apps\api\build\libs\synub-agents-api-0.1.0.jar --spring.profiles.active=local
 ```
 
 ## 7. 연결 확인

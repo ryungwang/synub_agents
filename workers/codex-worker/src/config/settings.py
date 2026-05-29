@@ -7,6 +7,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class WorkerSettings:
     api_base_url: str
+    admin_token: str
     worker_secret: str
     codex_command: str
     poll_seconds: int
@@ -19,6 +20,7 @@ class WorkerSettings:
 def load_settings() -> WorkerSettings:
     return WorkerSettings(
         api_base_url=os.environ.get("WORKER_API_BASE_URL", "http://localhost:8080"),
+        admin_token=os.environ.get("ADMIN_TOKEN", ""),
         worker_secret=os.environ.get("WORKER_SECRET", "local-worker-secret"),
         codex_command=os.environ.get("CODEX_COMMAND", "codex"),
         poll_seconds=int(os.environ.get("WORKER_POLL_SECONDS", "10")),

@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/synub_agents}
+    username: ${SPRING_DATASOURCE_USERNAME:synub_agents}
+    password: ${SPRING_DATASOURCE_PASSWORD:synub_agents}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: classpath:db/migration
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.company.aidevstaff: debug

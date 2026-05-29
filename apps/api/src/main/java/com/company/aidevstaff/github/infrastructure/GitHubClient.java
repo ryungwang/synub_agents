@@ -21,7 +21,7 @@ public class GitHubClient {
         RestClient.Builder builder = RestClient.builder()
                 .baseUrl("https://api.github.com")
                 .defaultHeader("Accept", "application/vnd.github+json")
-                .defaultHeader("User-Agent", "synub-ai-dev-staff");
+                .defaultHeader("User-Agent", "synub-agents");
         if (properties.token() != null && !properties.token().isBlank()) {
             builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.token());
         }
@@ -68,6 +68,33 @@ public class GitHubClient {
                 .body(new ParameterizedTypeReference<>() {});
         if (response == null) {
             throw new IllegalStateException("GitHub issue creation returned empty response");
+        }
+        return toIssue(response);
+    }
+
+    public GitHubIssue addLabels(int issueNumber, List<String> labels) {
+        List<String> normalizedLabels = labels == null ? List.of() : labels.stream()
+                .filter(label -> label != null && !label.isBlank())
+                .distinct()
+                .toList();
+        if (normalizedLabels.isEmpty()) {
+            throw new IllegalArgumentException("추가할 GitHub 라벨이 없습니다");
+        }
+        restClient.post()
+                .uri("/repos/{owner}/{repo}/issues/{issueNumber}/labels", properties.owner(), properties.repo(), issueNumber)
+                .body(Map.of("labels", normalizedLabels))
+                .retrieve()
+                .toBodilessEntity();
+        return getIssue(issueNumber);
+    }
+
+    public GitHubIssue getIssue(int issueNumber) {
+        Map<String, Object> response = restClient.get()
+                .uri("/repos/{owner}/{repo}/issues/{issueNumber}", properties.owner(), properties.repo(), issueNumber)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
+        if (response == null) {
+            throw new IllegalStateException("GitHub issue lookup returned empty response");
         }
         return toIssue(response);
     }
