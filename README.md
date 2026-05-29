@@ -26,9 +26,7 @@ This repository contains a real service scaffold, not a static demo:
 ### API with local H2
 
 ```powershell
-$env:JAVA_HOME='C:\Users\User\.jdks\ms-21.0.11'
-$env:Path="$env:JAVA_HOME\bin;C:\Users\User\intellij-workspace\synub_agents\.gradle-local\gradle-8.10.2\bin;$env:Path"
-java -jar apps\api\build\libs\ai-dev-staff-api-0.1.0.jar --spring.profiles.active=local
+.\infra\scripts\start-api-local.ps1
 ```
 
 API URL:
@@ -40,9 +38,7 @@ http://127.0.0.1:8080
 ### Web
 
 ```powershell
-$env:Path="C:\Users\User\intellij-workspace\synub_agents\.node-local\node-v22.11.0-win-x64;$env:Path"
-cd apps\web
-npm run dev -- --host 127.0.0.1 --port 3002
+.\infra\scripts\start-web-local.ps1
 ```
 
 If port `3002` is busy, choose another free port and keep the API proxy setting aligned.
@@ -56,9 +52,7 @@ http://127.0.0.1:3002
 ### Worker
 
 ```powershell
-cd workers\codex-worker
-py -m pip install -r requirements.txt
-py src\main.py
+.\infra\scripts\start-worker-local.ps1
 ```
 
 ## GitHub Integration

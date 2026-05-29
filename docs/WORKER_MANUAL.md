@@ -34,7 +34,7 @@ py -m pip install -r requirements.txt
 ## 실행
 
 ```powershell
-py src\main.py
+.\infra\scripts\start-worker-local.ps1
 ```
 
 워커는 주기적으로 API에 작업을 요청한다.

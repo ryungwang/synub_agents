@@ -49,9 +49,7 @@ $env:WORKER_SECRET='change-this'
 로컬 H2 기준 실행:
 
 ```powershell
-$env:JAVA_HOME='C:\Users\User\.jdks\ms-21.0.11'
-$env:Path="$env:JAVA_HOME\bin;$env:Path"
-java -jar apps\api\build\libs\ai-dev-staff-api-0.1.0.jar --spring.profiles.active=local
+.\infra\scripts\start-api-local.ps1
 ```
 
 상태 확인:
@@ -64,8 +62,7 @@ GET http://127.0.0.1:8080/api/github/status
 ## 웹 대시보드 실행
 
 ```powershell
-cd apps\web
-npm run dev -- --host 127.0.0.1 --port 3002
+.\infra\scripts\start-web-local.ps1
 ```
 
 브라우저에서 `http://127.0.0.1:3002`를 연다.
@@ -134,9 +131,7 @@ Codex worker가 가져갈 작업을 확인한다.
 ## 워커 실행
 
 ```powershell
-cd workers\codex-worker
-py -m pip install -r requirements.txt
-py src\main.py
+.\infra\scripts\start-worker-local.ps1
 ```
 
 워커는 `WORKER_SECRET`을 사용해 API에 접근한다. API와 워커의 secret 값이 다르면 작업을 가져오지 못한다.
