@@ -135,6 +135,8 @@ export interface ProjectWorkRequest {
   riskLevel: TaskRiskLevel;
   status: ProjectWorkRequestStatus;
   taskId: number | null;
+  taskStatus: TaskStatus | null;
+  prUrl: string | null;
   createdAt: string;
 }
 

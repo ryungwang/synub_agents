@@ -12,7 +12,10 @@ import {
   createTaskFromWorkRequest,
   fetchCompanyProjects,
   fetchCompanyUsers,
+  fetchProjectMembers,
   fetchProjectWorkRequests,
+  addProjectMember,
+  type AddProjectMemberPayload,
   type CreateCompanyProjectPayload,
   type CreateCompanyUserPayload,
   type CreateProjectWorkRequestPayload
@@ -39,6 +42,7 @@ import type {
   GitHubIssue,
   GitHubStatus,
   LocalServicesStatus,
+  ProjectMember,
   ProjectWorkRequest,
   Task,
   WorkerJob
@@ -55,6 +59,7 @@ export function App() {
   const [localServicesStatus, setLocalServicesStatus] = useState<LocalServicesStatus | null>(null);
   const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
   const [companyProjects, setCompanyProjects] = useState<CompanyProject[]>([]);
+  const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
   const [projectWorkRequests, setProjectWorkRequests] = useState<ProjectWorkRequest[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
@@ -101,6 +106,8 @@ export function App() {
     setCompanyUsers(nextCompanyUsers);
     setCompanyProjects(nextCompanyProjects);
     setProjectWorkRequests(nextProjectWorkRequests);
+    const nextProjectMembers = (await Promise.all(nextCompanyProjects.map((project) => fetchProjectMembers(project.id)))).flat();
+    setProjectMembers(nextProjectMembers);
     if (selectedTaskId && !nextTasks.some((task) => task.id === selectedTaskId)) {
       setSelectedTaskId(null);
     }
@@ -249,6 +256,16 @@ export function App() {
     }
   }
 
+  async function handleAddProjectMember(projectId: number, payload: AddProjectMemberPayload) {
+    try {
+      await addProjectMember(projectId, payload);
+      await refresh();
+      setToast("프로젝트 권한을 등록했습니다.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "프로젝트 권한 등록 실패");
+    }
+  }
+
   async function handleQueueWorkRequest(requestId: number) {
     try {
       await createTaskFromWorkRequest(requestId);
@@ -301,9 +318,13 @@ export function App() {
       <WorkspaceAdminPanel
         users={companyUsers}
         projects={companyProjects}
+        projectMembers={projectMembers}
         workRequests={projectWorkRequests}
+        workerJobs={workerJobs}
+        auditLogs={auditLogs}
         onCreateUser={handleCreateCompanyUser}
         onCreateProject={handleCreateCompanyProject}
+        onAddProjectMember={handleAddProjectMember}
         onCreateWorkRequest={handleCreateProjectWorkRequest}
         onQueueWorkRequest={handleQueueWorkRequest}
       />
