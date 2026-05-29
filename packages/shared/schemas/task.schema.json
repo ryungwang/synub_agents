@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "type": "object",
+  "required": ["source", "sourceUrl", "title", "riskLevel", "status", "repository"],
+  "properties": {
+    "id": { "type": "integer" },
+    "source": { "type": "string" },
+    "sourceUrl": { "type": "string" },
+    "githubIssueNumber": { "type": ["integer", "null"] },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "priority": { "type": "string" },
+    "riskLevel": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+    "status": {
+      "enum": ["QUEUED", "APPROVAL_REQUIRED", "WORKER_JOB_CREATED", "RUNNING", "PR_READY", "PR_OPEN", "DONE", "FAILED"]
+    },
+    "assignedAgentId": { "type": ["string", "null"] },
+    "repository": { "type": "string" },
+    "branchName": { "type": ["string", "null"] }
+  }
+}

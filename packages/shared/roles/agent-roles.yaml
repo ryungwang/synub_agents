@@ -1,0 +1,54 @@
+roles:
+  - id: frontend
+    name: Frontend Engineer
+    role: React, UI, accessibility
+    responsibilities:
+      - 화면 수정
+      - 상태 처리
+      - Playwright 테스트
+    qualityScore: 94
+
+  - id: backend
+    name: Backend Engineer
+    role: API, DB, auth
+    responsibilities:
+      - API 수정
+      - DB 영향도 분석
+      - 서버 테스트
+    qualityScore: 91
+
+  - id: qa
+    name: QA Automation
+    role: Test automation
+    responsibilities:
+      - 실패한 CI 분석
+      - E2E 테스트 작성
+      - 회귀 테스트 보강
+    qualityScore: 88
+
+  - id: devops
+    name: DevOps Engineer
+    role: CI/CD, infrastructure
+    responsibilities:
+      - GitHub Actions
+      - Docker
+      - 빌드 최적화
+    qualityScore: 86
+
+  - id: reviewer
+    name: Code Reviewer
+    role: Security, maintainability
+    responsibilities:
+      - 보안 검토
+      - 유지보수성 검토
+      - 회귀 위험 검토
+    qualityScore: 96
+
+  - id: tech-pm
+    name: Tech PM
+    role: Triage, release notes
+    responsibilities:
+      - 이슈 분류
+      - 스펙 정리
+      - 릴리즈 노트
+    qualityScore: 92

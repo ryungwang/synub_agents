@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-dev-staff-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ai_dev_staff}
+    username: ${SPRING_DATASOURCE_USERNAME:ai_dev_staff}
+    password: ${SPRING_DATASOURCE_PASSWORD:ai_dev_staff}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+
+app:
+  github:
+    token: ${GITHUB_TOKEN:}
+    owner: ${GITHUB_OWNER:}
+    repo: ${GITHUB_REPO:}
+    ready-label: ${GITHUB_READY_LABEL:codex-ready}
+  scheduler:
+    github-poll-ms: ${AGENT_POLL_INTERVAL_MS:300000}
+    worker-dispatch-ms: ${WORKER_DISPATCH_INTERVAL_MS:60000}
+  worker:
+    secret: ${WORKER_SECRET:local-worker-secret}
+    workspace-root: ${CODEX_WORKSPACE_ROOT:}
+    codex-command: ${CODEX_COMMAND:codex}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

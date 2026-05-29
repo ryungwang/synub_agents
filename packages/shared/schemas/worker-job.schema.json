@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkerJob",
+  "type": "object",
+  "required": ["id", "taskId", "workerType", "status", "command"],
+  "properties": {
+    "id": { "type": "integer" },
+    "taskId": { "type": "integer" },
+    "workerType": { "enum": ["CODEX"] },
+    "status": { "enum": ["PENDING", "CLAIMED", "RUNNING", "SUCCEEDED", "FAILED"] },
+    "workspacePath": { "type": ["string", "null"] },
+    "command": { "type": "string" }
+  }
+}
