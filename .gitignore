@@ -15,6 +15,7 @@ target/
 
 data/
 logs/
+.run/
 *.log
 *.pyc
 __pycache__/

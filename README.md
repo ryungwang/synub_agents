@@ -23,6 +23,32 @@ This repository contains a real service scaffold, not a static demo:
 
 ## Local Run
 
+### Start dashboard services
+
+Daily operation only needs one command. It starts the API and web dashboard in the background, loads `.env`, and writes logs under `.run\logs`.
+
+```powershell
+.\infra\scripts\start-local.ps1
+```
+
+Dashboard URL:
+
+```text
+http://127.0.0.1:3002
+```
+
+When Codex worker execution is needed:
+
+```powershell
+.\infra\scripts\start-local.ps1 -WithWorker
+```
+
+Stop local services:
+
+```powershell
+.\infra\scripts\stop-local.ps1
+```
+
 ### API with local H2
 
 ```powershell

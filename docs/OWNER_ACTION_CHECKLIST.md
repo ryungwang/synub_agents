@@ -80,21 +80,52 @@ git status --short
 
 ## 2. 매번 실행할 때 하는 작업
 
+평소에는 터미널을 3개 열 필요가 없다. 운영자 대시보드만 사용할 때는 한 명령으로 API와 웹을 백그라운드 실행한다.
+
 로컬 기본 실행은 H2 파일 DB를 사용한다. PostgreSQL이나 Docker를 먼저 켤 필요가 없다.
 
-전체 실행 순서만 보고 싶으면 다음 명령을 실행한다.
+### 평소 실행
 
 ```powershell
 cd C:\Users\User\intellij-workspace\synub_agents
 .\infra\scripts\start-local.ps1
 ```
 
-### API 실행
+접속 주소:
 
-터미널 1:
+```text
+http://127.0.0.1:3002
+```
+
+로그 위치:
+
+```text
+C:\Users\User\intellij-workspace\synub_agents\.run\logs
+```
+
+### 에이전트 작업까지 같이 실행
+
+`codex-ready` 작업을 워커가 실제 처리해야 할 때만 워커까지 같이 켠다.
 
 ```powershell
 cd C:\Users\User\intellij-workspace\synub_agents
+.\infra\scripts\start-local.ps1 -WithWorker
+```
+
+### 종료
+
+```powershell
+cd C:\Users\User\intellij-workspace\synub_agents
+.\infra\scripts\stop-local.ps1
+```
+
+### 개별 실행이 필요한 경우
+
+문제 분석이나 로그 확인 때문에 개별 프로세스를 직접 보고 싶을 때만 아래 명령을 사용한다.
+
+API:
+
+```powershell
 .\infra\scripts\start-api-local.ps1
 ```
 
@@ -112,29 +143,15 @@ cd C:\Users\User\intellij-workspace\synub_agents
 - 로컬 DB 파일은 `synub_agents\data\local-db.mv.db`에 생성된다.
 - Docker나 PostgreSQL이 없어도 로컬 API 실행은 가능하다.
 
-### 웹 대시보드 실행
-
-터미널 2:
+웹:
 
 ```powershell
-cd C:\Users\User\intellij-workspace\synub_agents
 .\infra\scripts\start-web-local.ps1
 ```
 
-접속 주소:
-
-```text
-http://127.0.0.1:3002
-```
-
-### 워커 실행
-
-에이전트가 실제 수정 작업을 처리해야 할 때만 실행한다.
-
-터미널 3:
+워커:
 
 ```powershell
-cd C:\Users\User\intellij-workspace\synub_agents
 .\infra\scripts\start-worker-local.ps1
 ```
 
