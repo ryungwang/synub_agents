@@ -42,4 +42,8 @@ public class ApprovalService {
     public List<Approval> findWaiting() {
         return approvalRepository.findByStatusOrderByRequestedAtDesc(ApprovalStatus.WAITING);
     }
+
+    public List<Approval> findByTaskId(Long taskId) {
+        return approvalRepository.findByTaskIdOrderByRequestedAtDesc(taskId);
+    }
 }

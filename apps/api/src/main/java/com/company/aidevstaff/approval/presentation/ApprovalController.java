@@ -24,6 +24,11 @@ public class ApprovalController {
         return approvalService.findAll().stream().map(ApprovalResponse::from).toList();
     }
 
+    @GetMapping("/tasks/{taskId}")
+    public List<ApprovalResponse> findByTaskId(@PathVariable Long taskId) {
+        return approvalService.findByTaskId(taskId).stream().map(ApprovalResponse::from).toList();
+    }
+
     @PostMapping("/{approvalId}/approve")
     public ApprovalResponse approve(@PathVariable Long approvalId, @RequestBody ApprovalApproveRequest request) {
         return ApprovalResponse.from(approvalService.approve(approvalId, request.approvedBy()));

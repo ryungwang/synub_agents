@@ -3,6 +3,7 @@ package com.company.aidevstaff.run.presentation;
 import com.company.aidevstaff.run.application.RunQueryService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,5 +19,10 @@ public class RunController {
     @GetMapping
     public List<RunResponse> findRecent() {
         return runQueryService.findRecent().stream().map(RunResponse::from).toList();
+    }
+
+    @GetMapping("/tasks/{taskId}")
+    public List<RunResponse> findByTaskId(@PathVariable Long taskId) {
+        return runQueryService.findByTaskId(taskId).stream().map(RunResponse::from).toList();
     }
 }

@@ -16,4 +16,8 @@ public class RunQueryService {
     public List<Run> findRecent() {
         return runRepository.findTop50ByOrderByCreatedAtDesc();
     }
+
+    public List<Run> findByTaskId(Long taskId) {
+        return runRepository.findByTaskIdOrderByCreatedAtDesc(taskId);
+    }
 }

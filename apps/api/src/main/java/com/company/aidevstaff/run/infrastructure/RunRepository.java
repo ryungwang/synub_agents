@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RunRepository extends JpaRepository<Run, Long> {
     List<Run> findTop50ByOrderByCreatedAtDesc();
+    List<Run> findByTaskIdOrderByCreatedAtDesc(Long taskId);
 }
