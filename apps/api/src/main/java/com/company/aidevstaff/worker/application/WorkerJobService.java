@@ -13,6 +13,9 @@ import com.company.aidevstaff.worker.domain.WorkerJobStatus;
 import com.company.aidevstaff.worker.domain.WorkerType;
 import com.company.aidevstaff.worker.infrastructure.WorkerJobRepository;
 import com.company.aidevstaff.worker.infrastructure.WorkerProperties;
+import com.company.aidevstaff.workspace.domain.CompanyProject;
+import com.company.aidevstaff.workspace.infrastructure.CompanyProjectRepository;
+import com.company.aidevstaff.workspace.infrastructure.ProjectWorkRequestRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,33 +27,60 @@ public class WorkerJobService {
     private final RunRepository runRepository;
     private final WorkerProperties workerProperties;
     private final AuditLogService auditLogService;
+    private final ProjectWorkRequestRepository workRequestRepository;
+    private final CompanyProjectRepository projectRepository;
 
     public WorkerJobService(
             WorkerJobRepository workerJobRepository,
             TaskRepository taskRepository,
             RunRepository runRepository,
             WorkerProperties workerProperties,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            ProjectWorkRequestRepository workRequestRepository,
+            CompanyProjectRepository projectRepository
     ) {
         this.workerJobRepository = workerJobRepository;
         this.taskRepository = taskRepository;
         this.runRepository = runRepository;
         this.workerProperties = workerProperties;
         this.auditLogService = auditLogService;
+        this.workRequestRepository = workRequestRepository;
+        this.projectRepository = projectRepository;
     }
 
     @Transactional
     public WorkerJob createForTask(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("task not found: " + taskId));
+        WorkerJob existingJob = workerJobRepository.findFirstByTaskIdOrderByCreatedAtDesc(taskId).orElse(null);
+        if (existingJob != null) {
+            return existingJob;
+        }
         if (task.getRiskLevel() == TaskRiskLevel.HIGH) {
             throw new IllegalArgumentException("high risk task requires approval before worker job creation");
         }
         String command = workerProperties.codexCommand() + " exec \"" + escape(task.getTitle()) + "\"";
-        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, WorkerType.CODEX, workerProperties.workspaceRoot(), command));
+        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, WorkerType.CODEX, resolveWorkspacePath(task), command));
         task.markWorkerJobCreated();
         auditLogService.record("SYSTEM", "worker", "WORKER_JOB_CREATED", "TASK", String.valueOf(taskId), "jobId=" + job.getId());
         return job;
+    }
+
+    @Transactional
+    public int dispatchQueuedTasks() {
+        List<Task> queuedTasks = taskRepository.findByStatusOrderByCreatedAtAsc(TaskStatus.QUEUED);
+        int created = 0;
+        for (Task task : queuedTasks) {
+            if (workerJobRepository.existsByTaskId(task.getId()) || task.getRiskLevel() == TaskRiskLevel.HIGH) {
+                continue;
+            }
+            createForTask(task.getId());
+            created++;
+        }
+        if (created > 0) {
+            auditLogService.record("SYSTEM", "worker-dispatch", "WORKER_DISPATCHED", "WORKER_JOB", null, "created=" + created);
+        }
+        return created;
     }
 
     @Transactional
@@ -60,6 +90,10 @@ public class WorkerJobService {
         job.claim();
         job.start();
         taskRepository.findById(job.getTaskId()).ifPresent(Task::markRunning);
+        workRequestRepository.findByTaskId(job.getTaskId()).ifPresent(request -> {
+            request.markRunning();
+            workRequestRepository.save(request);
+        });
         auditLogService.record("WORKER", "codex-worker", "WORKER_JOB_CLAIMED", "WORKER_JOB", String.valueOf(job.getId()), null);
         return job;
     }
@@ -82,6 +116,14 @@ public class WorkerJobService {
             } else {
                 task.markFailed();
             }
+        });
+        workRequestRepository.findByTaskId(job.getTaskId()).ifPresent(workRequest -> {
+            if (request.success()) {
+                workRequest.markDone();
+            } else {
+                workRequest.markRejected();
+            }
+            workRequestRepository.save(workRequest);
         });
         runRepository.save(new Run(
                 job.getTaskId(),
@@ -114,6 +156,16 @@ public class WorkerJobService {
 
     private String escape(String value) {
         return value.replace("\"", "\\\"");
+    }
+
+    private String resolveWorkspacePath(Task task) {
+        if ("PROJECT_REQUEST".equals(task.getSource())) {
+            return workRequestRepository.findByTaskId(task.getId())
+                    .flatMap(request -> projectRepository.findById(request.getProjectId()))
+                    .map(CompanyProject::getWorkspacePath)
+                    .orElse(workerProperties.workspaceRoot());
+        }
+        return workerProperties.workspaceRoot();
     }
 
     public record WorkerJobReportRequest(

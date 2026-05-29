@@ -258,6 +258,7 @@ cd C:\Users\User\intellij-workspace\synub_agents
 - [ ] `codex-ready` 동기화 테스트 완료
 - [ ] 워커 실행 테스트 완료
 - [ ] PR 생성 또는 실패 로그 확인 완료
+- [ ] 중앙 프로젝트 작업 요청이 Worker Job으로 자동 배정되는지 확인 완료
 - [ ] 직원 PC 설치 테스트 완료
 - [ ] 배포 방식 결정
 - [ ] 토큰과 secret이 Git에 커밋되지 않음

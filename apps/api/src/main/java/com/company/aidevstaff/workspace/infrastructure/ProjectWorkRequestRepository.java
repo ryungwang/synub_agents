@@ -2,6 +2,7 @@ package com.company.aidevstaff.workspace.infrastructure;
 
 import com.company.aidevstaff.workspace.domain.ProjectWorkRequest;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProjectWorkRequestRepository extends JpaRepository<ProjectWorkRequest, Long> {
@@ -9,4 +10,5 @@ public interface ProjectWorkRequestRepository extends JpaRepository<ProjectWorkR
     List<ProjectWorkRequest> findByProjectIdOrderByCreatedAtDesc(Long projectId);
     List<ProjectWorkRequest> findByRequesterIdOrderByCreatedAtDesc(String requesterId);
     List<ProjectWorkRequest> findByProjectIdAndRequesterIdOrderByCreatedAtDesc(Long projectId, String requesterId);
+    Optional<ProjectWorkRequest> findByTaskId(Long taskId);
 }

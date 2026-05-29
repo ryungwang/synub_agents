@@ -50,6 +50,14 @@ py -m pip install -r requirements.txt
 7. GitHub 설정이 있으면 브랜치 생성, 커밋, push, PR 생성을 시도한다.
 8. API에 성공/실패 결과를 보고한다.
 
+## 중앙 프로젝트 작업 자동 배정
+
+중앙 프로젝트 작업 요청은 운영자 또는 프로젝트 리더가 `작업으로 전환`하면 `Task`로 생성된다.
+
+API의 worker dispatch scheduler는 `QUEUED` 상태의 Task를 주기적으로 확인하고, 아직 worker job이 없는 작업이면 자동으로 `PENDING` worker job을 만든다. 프로젝트 작업 요청에서 만들어진 Task는 해당 프로젝트의 `workspacePath`를 worker 실행 경로로 사용한다.
+
+Worker가 job을 claim하면 원래 프로젝트 작업 요청 상태도 `RUNNING`으로 바뀐다. Worker가 결과를 보고하면 성공 시 `DONE`, 실패 시 `REJECTED`로 바뀌고, PR이 생성된 경우 Task와 직원 앱 응답에 PR 링크가 함께 표시된다.
+
 ## 안전 기준
 
 - dirty worktree에서는 기본적으로 실행하지 않는다.

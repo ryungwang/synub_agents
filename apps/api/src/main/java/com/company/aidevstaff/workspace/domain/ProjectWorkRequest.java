@@ -68,6 +68,21 @@ public class ProjectWorkRequest {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public void markRunning() {
+        this.status = ProjectWorkRequestStatus.RUNNING;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void markDone() {
+        this.status = ProjectWorkRequestStatus.DONE;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void markRejected() {
+        this.status = ProjectWorkRequestStatus.REJECTED;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getProjectId() { return projectId; }
     public String getRequesterId() { return requesterId; }
