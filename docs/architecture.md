@@ -1,15 +1,15 @@
-# Architecture
+# 아키텍처
 
-## Runtime Flow
+## 실행 구조
 
 ```text
-React Dashboard
+React 운영 콘솔
         ↓
 Spring Boot API
         ↓
-PostgreSQL
+H2 또는 PostgreSQL
         ↓
-Spring Scheduler
+작업 디스패처
         ↓
 Worker Job
         ↓
@@ -18,14 +18,21 @@ Python Codex Worker
 Codex CLI / Git / Test Runner
 ```
 
-## MVP Data Flow
+## 데이터 흐름
 
-1. Spring Scheduler calls GitHub every 5 minutes.
-2. GitHub issues are filtered by `codex-ready`.
-3. New issues become `tasks`.
-4. Risk and assigned AI employee are computed.
-5. High-risk tasks create approval requests.
-6. User creates a worker job for approved/eligible tasks.
-7. Worker claims the job and runs Codex CLI.
-8. Worker reports summary, diff, test result, and log path.
-9. Dashboard shows queue, approvals, runs, and audit logs.
+1. 직원 앱 또는 GitHub Issue에서 요청이 들어온다.
+2. 운영자는 오류 접수 또는 프로젝트 요청을 검토한다.
+3. 실행 가능한 항목에 `codex-ready` 라벨 또는 작업 전환을 적용한다.
+4. API는 작업을 만들고 위험도와 담당 AI 직원을 계산한다.
+5. 고위험 작업은 승인 대기 상태로 보낸다.
+6. 운영자 또는 디스패처가 worker job을 만든다.
+7. 워커가 job을 claim하고 Codex CLI를 실행한다.
+8. 워커가 요약, diff, 테스트 결과, 로그 경로, PR 링크를 API에 보고한다.
+9. 운영 콘솔은 작업 검토, 실행 관리, 감사 로그 화면에 결과를 표시한다.
+
+## 운영 경계
+
+- 운영 콘솔은 승인과 감사의 기준이 되는 중앙 관리 지점이다.
+- 직원 앱은 요청과 오류 제보를 등록하는 클라이언트다.
+- 워커는 승인된 작업만 로컬 작업 디렉터리에서 실행한다.
+- PR은 자동 병합하지 않는다.

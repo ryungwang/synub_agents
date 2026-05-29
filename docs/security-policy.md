@@ -1,11 +1,37 @@
-# Security Policy
+# 보안 정책
 
-Disallowed automation:
+## 자동화 금지 항목
 
-- automatic merge
-- automatic production deployment
-- automatic DB migration execution
-- automatic customer replies
-- editing auth/payment/security/deployment files without approval
+다음 작업은 자동으로 처리하지 않는다.
 
-Worker must stop or report failure if it detects high-risk work without approval.
+- PR 자동 병합
+- production 자동 배포
+- DB migration 자동 실행
+- 고객 또는 외부 사용자에게 자동 답변
+- 인증, 결제, 보안, 배포 파일 수정
+- secret, token, 비밀번호 변경
+
+## 승인 필요 항목
+
+다음 작업은 운영자 승인 후 처리한다.
+
+- 권한과 라이선스 변경
+- 인증/인가 로직 변경
+- 데이터 삭제 또는 대량 수정
+- 배포 스크립트 변경
+- 운영 DB 구조 변경
+
+## 민감 정보 기준
+
+다음 값은 코드, 문서, 이슈, 로그에 남기지 않는다.
+
+- GitHub token
+- API key
+- 관리자 토큰
+- worker secret
+- 고객 개인정보
+- 운영 DB 접속 정보
+
+## 워커 기준
+
+워커는 승인되지 않은 고위험 작업을 감지하면 실행하지 않고 실패로 보고해야 한다.
