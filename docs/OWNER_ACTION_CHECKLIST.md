@@ -80,6 +80,15 @@ git status --short
 
 ## 2. 매번 실행할 때 하는 작업
 
+로컬 기본 실행은 H2 파일 DB를 사용한다. PostgreSQL이나 Docker를 먼저 켤 필요가 없다.
+
+전체 실행 순서만 보고 싶으면 다음 명령을 실행한다.
+
+```powershell
+cd C:\Users\User\intellij-workspace\synub_agents
+.\infra\scripts\start-local.ps1
+```
+
 ### API 실행
 
 터미널 1:
@@ -92,9 +101,16 @@ cd C:\Users\User\intellij-workspace\synub_agents
 이 스크립트가 자동으로 하는 일:
 
 - `.env` 로드
+- 로컬 실행용 H2 파일 DB 설정 적용
 - `JAVA_HOME` 설정
 - API jar가 없으면 빌드
 - API를 `local` 프로필로 실행
+
+참고:
+
+- `.env`에 `SPRING_DATASOURCE_URL`이 있어도 `start-api-local.ps1`은 로컬 H2 파일 DB를 우선 사용한다.
+- 로컬 DB 파일은 `synub_agents\data\local-db.mv.db`에 생성된다.
+- Docker나 PostgreSQL이 없어도 로컬 API 실행은 가능하다.
 
 ### 웹 대시보드 실행
 

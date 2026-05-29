@@ -1,8 +1,8 @@
 $ErrorActionPreference = "Stop"
 $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 
-Write-Host "Starting PostgreSQL..."
-docker compose -f (Join-Path $root "infra\docker\docker-compose.local.yml") up -d postgres
+Write-Host "Local mode uses the H2 file database."
+Write-Host "No PostgreSQL or Docker startup is required."
 
 Write-Host "Start API in another terminal:"
 Write-Host "  .\infra\scripts\start-api-local.ps1"
