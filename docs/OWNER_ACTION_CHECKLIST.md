@@ -49,7 +49,7 @@
 우선순위 기준으로 남은 작업은 아래 순서다.
 
 1. 로컬 대시보드 실행 확인
-2. GitHub 연결 확인
+2. GitHub 연결 확인 완료
 3. 오류 제보 테스트
 4. `codex-ready` 작업 전환 테스트
 5. 워커 실행 및 PR 생성 흐름 확인
@@ -103,11 +103,11 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/github/status' | ConvertTo-Jso
 
 정상 조건:
 
-- [ ] `configured`가 `true`다.
-- [ ] `tokenConfigured`가 `true`다.
-- [ ] `repository`가 `ryungwang/synub-teams-ai`다.
-- [ ] `readyLabel`이 `codex-ready`다.
-- [ ] `reachable`이 `true`다.
+- [x] `configured`가 `true`다.
+- [x] `tokenConfigured`가 `true`다.
+- [x] `repository`가 `ryungwang/synub-teams-ai`다.
+- [x] `readyLabel`이 `codex-ready`다.
+- [x] `reachable`이 `true`다.
 
 문제가 있으면 확인할 것:
 
@@ -229,7 +229,7 @@ cd C:\Users\User\intellij-workspace\synub_agents
 - [x] GitHub 토큰 발급 완료
 - [x] `.env` 기본 설정 완료
 - [x] 로컬 대시보드 실행 확인
-- [ ] GitHub status `reachable: true`
+- [x] GitHub status `reachable: true`
 - [ ] 직원용 앱 오류 제보 테스트 완료
 - [ ] 오류 제보함에서 테스트 이슈 확인
 - [ ] `codex-ready` 동기화 테스트 완료
