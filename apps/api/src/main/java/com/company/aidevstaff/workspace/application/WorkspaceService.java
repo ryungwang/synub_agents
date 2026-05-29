@@ -84,9 +84,24 @@ public class WorkspaceService {
         return workRequestRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    public List<ProjectWorkRequest> findWorkRequests(String requesterId) {
+        if (requesterId == null || requesterId.isBlank()) {
+            return findWorkRequests();
+        }
+        return workRequestRepository.findByRequesterIdOrderByCreatedAtDesc(requesterId.trim().toLowerCase());
+    }
+
     public List<ProjectWorkRequest> findProjectWorkRequests(Long projectId) {
         ensureProject(projectId);
         return workRequestRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
+    }
+
+    public List<ProjectWorkRequest> findProjectWorkRequests(Long projectId, String requesterId) {
+        ensureProject(projectId);
+        if (requesterId == null || requesterId.isBlank()) {
+            return findProjectWorkRequests(projectId);
+        }
+        return workRequestRepository.findByProjectIdAndRequesterIdOrderByCreatedAtDesc(projectId, requesterId.trim().toLowerCase());
     }
 
     @Transactional

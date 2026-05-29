@@ -183,6 +183,7 @@ C:\Users\User\intellij-workspace\synub-teams-ai\release\Synub.Teams.AI.Setup.2.1
 - [x] 중앙 작업 요청을 기존 작업 큐 task로 전환할 수 있다.
 - [ ] `synub-teams-ai` 직원 앱에서 중앙 작업 요청을 직접 생성한다.
 - [ ] 직원 앱에서 생성한 요청이 운영자 대시보드에 보인다.
+- [ ] 직원 앱에서 내 작업 요청 상태가 보인다.
 - [ ] 운영자 또는 프로젝트 리더가 작업 큐 전환을 실행한다.
 - [ ] 워커가 해당 작업을 처리한다.
 

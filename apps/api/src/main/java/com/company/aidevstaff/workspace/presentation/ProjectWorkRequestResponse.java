@@ -1,6 +1,7 @@
 package com.company.aidevstaff.workspace.presentation;
 
 import com.company.aidevstaff.task.domain.TaskRiskLevel;
+import com.company.aidevstaff.task.domain.TaskStatus;
 import com.company.aidevstaff.workspace.domain.ProjectWorkRequest;
 import com.company.aidevstaff.workspace.domain.ProjectWorkRequestStatus;
 import com.company.aidevstaff.workspace.domain.ProjectWorkRequestType;
@@ -17,9 +18,15 @@ public record ProjectWorkRequestResponse(
         TaskRiskLevel riskLevel,
         ProjectWorkRequestStatus status,
         Long taskId,
+        TaskStatus taskStatus,
+        String prUrl,
         OffsetDateTime createdAt
 ) {
     public static ProjectWorkRequestResponse from(ProjectWorkRequest request) {
+        return from(request, null, null);
+    }
+
+    public static ProjectWorkRequestResponse from(ProjectWorkRequest request, TaskStatus taskStatus, String prUrl) {
         return new ProjectWorkRequestResponse(
                 request.getId(),
                 request.getProjectId(),
@@ -31,6 +38,8 @@ public record ProjectWorkRequestResponse(
                 request.getRiskLevel(),
                 request.getStatus(),
                 request.getTaskId(),
+                taskStatus,
+                prUrl,
                 request.getCreatedAt()
         );
     }
