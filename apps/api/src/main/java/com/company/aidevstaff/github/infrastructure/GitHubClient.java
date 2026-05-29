@@ -1,6 +1,7 @@
 package com.company.aidevstaff.github.infrastructure;
 
 import com.company.aidevstaff.github.domain.GitHubIssue;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.core.ParameterizedTypeReference;
@@ -53,6 +54,33 @@ public class GitHubClient {
                 .filter(raw -> !raw.containsKey("pull_request"))
                 .map(this::toIssue)
                 .toList();
+    }
+
+    public GitHubIssue createIssue(String title, String body, List<String> labels) {
+        Map<String, Object> response = restClient.post()
+                .uri("/repos/{owner}/{repo}/issues", properties.owner(), properties.repo())
+                .body(Map.of(
+                        "title", title,
+                        "body", body,
+                        "labels", normalizeLabels(labels)
+                ))
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
+        if (response == null) {
+            throw new IllegalStateException("GitHub issue creation returned empty response");
+        }
+        return toIssue(response);
+    }
+
+    private List<String> normalizeLabels(List<String> labels) {
+        List<String> values = new ArrayList<>();
+        if (labels != null) {
+            values.addAll(labels.stream().filter(label -> label != null && !label.isBlank()).toList());
+        }
+        if (values.stream().noneMatch("bug"::equalsIgnoreCase)) {
+            values.add("bug");
+        }
+        return values;
     }
 
     @SuppressWarnings("unchecked")

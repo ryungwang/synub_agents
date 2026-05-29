@@ -6,6 +6,7 @@ import { fetchGitHubIssues, fetchGitHubStatus, syncReadyIssues } from "../api/gi
 import { fetchLocalServicesStatus, startWorkerService, stopWorkerService } from "../api/localServicesApi";
 import { createWorkerJob, fetchTasks } from "../api/tasksApi";
 import {
+  addProjectMember,
   createCompanyProject,
   createCompanyUser,
   createProjectWorkRequest,
@@ -14,14 +15,13 @@ import {
   fetchCompanyUsers,
   fetchProjectMembers,
   fetchProjectWorkRequests,
-  addProjectMember,
   type AddProjectMemberPayload,
   type CreateCompanyProjectPayload,
   type CreateCompanyUserPayload,
   type CreateProjectWorkRequestPayload
 } from "../api/workspaceApi";
 import { fetchWorkerJobs } from "../api/workerJobsApi";
-import { AppShell } from "../components/layout/AppShell";
+import { AppShell, type AdminPage } from "../components/layout/AppShell";
 import { Topbar } from "../components/layout/Topbar";
 import { StaffPage } from "../features/agents/StaffPage";
 import { ApprovalsPage } from "../features/approvals/ApprovalsPage";
@@ -48,7 +48,20 @@ import type {
   WorkerJob
 } from "../types/domain";
 
+const pageMeta: Record<AdminPage, { title: string; description: string }> = {
+  overview: { title: "운영 현황", description: "사내 AI 작업 대시보드" },
+  workspace: { title: "프로젝트와 권한", description: "직원, 프로젝트, 팀 권한 관리" },
+  staff: { title: "AI 직원", description: "팀별 AI 역할과 담당 범위 관리" },
+  tasks: { title: "작업 대기열", description: "중앙 작업 요청과 실행 상태 관리" },
+  issues: { title: "오류 제보", description: "직원 앱과 GitHub 이슈 흐름 확인" },
+  workers: { title: "워커와 PR", description: "Codex 실행 작업과 PR 결과 확인" },
+  approvals: { title: "승인", description: "배포, 보안, 마이그레이션 승인 처리" },
+  audit: { title: "감사 로그", description: "운영자 변경 이력 추적" },
+  settings: { title: "설정", description: "GitHub 연결과 로컬 서비스 제어" }
+};
+
 export function App() {
+  const [activePage, setActivePage] = useState<AdminPage>("overview");
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
@@ -139,6 +152,11 @@ export function App() {
     };
   }, [agents, tasks, approvals, auditLogs, workerJobs, githubIssues, query]);
 
+  const selectedTask = useMemo(() => {
+    if (selectedTaskId == null) return filtered.tasks[0] ?? null;
+    return tasks.find((task) => task.id === selectedTaskId) ?? null;
+  }, [filtered.tasks, selectedTaskId, tasks]);
+
   async function handleRefreshIssues() {
     setLoadingIssues(true);
     try {
@@ -151,11 +169,6 @@ export function App() {
       setLoadingIssues(false);
     }
   }
-
-  const selectedTask = useMemo(() => {
-    if (selectedTaskId == null) return filtered.tasks[0] ?? null;
-    return tasks.find((task) => task.id === selectedTaskId) ?? null;
-  }, [filtered.tasks, selectedTaskId, tasks]);
 
   async function handleSync() {
     setSyncing(true);
@@ -174,7 +187,7 @@ export function App() {
     try {
       await createWorkerJob(taskId);
       await refresh();
-      setToast("작업 실행이 생성되었습니다.");
+      setToast("작업 실행을 생성했습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "작업 실행 생성 실패");
     }
@@ -184,7 +197,7 @@ export function App() {
     try {
       await approveTask(approvalId);
       await refresh();
-      setToast("승인되었습니다.");
+      setToast("승인했습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "승인 실패");
     }
@@ -194,7 +207,7 @@ export function App() {
     try {
       await createAgent(payload);
       await refresh();
-      setToast("AI 직원이 추가되었습니다.");
+      setToast("AI 직원을 추가했습니다.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : "AI 직원 추가 실패");
     }
@@ -270,15 +283,114 @@ export function App() {
     try {
       await createTaskFromWorkRequest(requestId);
       await refresh();
-      setToast("작업 요청을 중앙 작업 큐로 전환했습니다.");
+      setToast("작업 요청을 중앙 작업으로 전환했습니다.");
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "작업 큐 전환 실패");
+      setToast(error instanceof Error ? error.message : "작업 전환 실패");
+    }
+  }
+
+  const metrics = (
+    <section className="metrics">
+      <Metric label="AI 직원" value={agents.length} hint="역할" />
+      <Metric label="진행 작업" value={tasks.filter((task) => !["DONE", "FAILED"].includes(task.status)).length} hint="대기열" />
+      <Metric label="승인 대기" value={approvals.filter((approval) => approval.status === "WAITING").length} hint="검토" />
+      <Metric label="실행 작업" value={workerJobs.length} hint="Codex" />
+    </section>
+  );
+
+  function renderPage() {
+    switch (activePage) {
+      case "overview":
+        return (
+          <div className="page-stack">
+            {metrics}
+            <section className="main-grid">
+              <TaskQueueTable tasks={filtered.tasks.slice(0, 8)} onCreateWorkerJob={handleCreateWorkerJob} onSelectTask={(task) => setSelectedTaskId(task.id)} />
+              <aside className="side-stack">
+                <TaskDetailPanel task={selectedTask} workerJobs={workerJobs} />
+                <ApprovalsPage approvals={filtered.approvals.slice(0, 4)} onApprove={handleApprove} />
+              </aside>
+            </section>
+          </div>
+        );
+      case "workspace":
+        return (
+          <WorkspaceAdminPanel
+            users={companyUsers}
+            projects={companyProjects}
+            projectMembers={projectMembers}
+            workRequests={projectWorkRequests}
+            workerJobs={workerJobs}
+            auditLogs={auditLogs}
+            onCreateUser={handleCreateCompanyUser}
+            onCreateProject={handleCreateCompanyProject}
+            onAddProjectMember={handleAddProjectMember}
+            onCreateWorkRequest={handleCreateProjectWorkRequest}
+            onQueueWorkRequest={handleQueueWorkRequest}
+          />
+        );
+      case "staff":
+        return <StaffPage agents={filtered.agents} onCreateAgent={handleCreateAgent} />;
+      case "tasks":
+        return (
+          <section className="main-grid">
+            <TaskQueueTable tasks={filtered.tasks} onCreateWorkerJob={handleCreateWorkerJob} onSelectTask={(task) => setSelectedTaskId(task.id)} />
+            <TaskDetailPanel task={selectedTask} workerJobs={workerJobs} />
+          </section>
+        );
+      case "issues":
+        return (
+          <IssueInboxPanel
+            issues={filtered.githubIssues}
+            tasks={tasks}
+            githubStatus={githubStatus}
+            loading={loadingIssues}
+            onRefresh={handleRefreshIssues}
+          />
+        );
+      case "workers":
+        return (
+          <section className="workspace-grid">
+            <WorkerJobsPanel jobs={filtered.workerJobs} />
+            <aside className="side-stack">
+              <section className="panel">
+                <p className="eyebrow">Pull Request</p>
+                <h2>PR 결과 채널</h2>
+                <p className="muted">GitHub 작업 설정이 완료되면 성공한 Codex 변경 사항을 브랜치에 push하고 Pull Request로 엽니다.</p>
+              </section>
+              <LocalServicesPanel
+                status={localServicesStatus}
+                busy={localServiceBusy}
+                onStartWorker={handleStartWorkerService}
+                onStopWorker={handleStopWorkerService}
+              />
+            </aside>
+          </section>
+        );
+      case "approvals":
+        return <ApprovalsPage approvals={filtered.approvals} onApprove={handleApprove} />;
+      case "audit":
+        return <AuditLogPage logs={filtered.auditLogs} />;
+      case "settings":
+        return (
+          <section className="workspace-grid">
+            <GitHubSettingsPanel status={githubStatus} />
+            <LocalServicesPanel
+              status={localServicesStatus}
+              busy={localServiceBusy}
+              onStartWorker={handleStartWorkerService}
+              onStopWorker={handleStopWorkerService}
+            />
+          </section>
+        );
     }
   }
 
   return (
-    <AppShell>
+    <AppShell activePage={activePage} onPageChange={setActivePage}>
       <Topbar
+        title={pageMeta[activePage].title}
+        description={pageMeta[activePage].description}
         paused={paused}
         syncing={syncing}
         query={query}
@@ -286,67 +398,7 @@ export function App() {
         onQueryChange={setQuery}
         onSync={handleSync}
       />
-
-      <section className="metrics">
-        <Metric label="AI 직원" value={agents.length} hint="역할" />
-        <Metric label="진행 작업" value={tasks.filter((task) => !["DONE", "FAILED"].includes(task.status)).length} hint="대기열" />
-        <Metric label="승인 대기" value={approvals.filter((approval) => approval.status === "WAITING").length} hint="승인" />
-        <Metric label="실행 작업" value={workerJobs.length} hint="Codex" />
-      </section>
-
-      <section className="main-grid">
-        <TaskQueueTable tasks={filtered.tasks} onCreateWorkerJob={handleCreateWorkerJob} onSelectTask={(task) => setSelectedTaskId(task.id)} />
-        <aside className="side-stack">
-          <TaskDetailPanel task={selectedTask} workerJobs={workerJobs} />
-          <ApprovalsPage approvals={filtered.approvals} onApprove={handleApprove} />
-        </aside>
-      </section>
-
-      <section className="workspace-grid">
-        <StaffPage agents={filtered.agents} onCreateAgent={handleCreateAgent} />
-        <aside className="side-stack">
-          <GitHubSettingsPanel status={githubStatus} />
-          <LocalServicesPanel
-            status={localServicesStatus}
-            busy={localServiceBusy}
-            onStartWorker={handleStartWorkerService}
-            onStopWorker={handleStopWorkerService}
-          />
-        </aside>
-      </section>
-
-      <WorkspaceAdminPanel
-        users={companyUsers}
-        projects={companyProjects}
-        projectMembers={projectMembers}
-        workRequests={projectWorkRequests}
-        workerJobs={workerJobs}
-        auditLogs={auditLogs}
-        onCreateUser={handleCreateCompanyUser}
-        onCreateProject={handleCreateCompanyProject}
-        onAddProjectMember={handleAddProjectMember}
-        onCreateWorkRequest={handleCreateProjectWorkRequest}
-        onQueueWorkRequest={handleQueueWorkRequest}
-      />
-
-      <IssueInboxPanel
-        issues={filtered.githubIssues}
-        tasks={tasks}
-        githubStatus={githubStatus}
-        loading={loadingIssues}
-        onRefresh={handleRefreshIssues}
-      />
-
-      <section className="workspace-grid">
-        <WorkerJobsPanel jobs={filtered.workerJobs} />
-        <section className="panel" id="pull-requests">
-          <p className="eyebrow">Pull Request</p>
-          <h2>PR 결과 채널</h2>
-          <p className="muted">GitHub 작업 설정이 완료되면 성공한 Codex 변경 사항을 브랜치에 push하고 Pull Request로 엽니다.</p>
-        </section>
-      </section>
-
-      <AuditLogPage logs={filtered.auditLogs} />
+      {renderPage()}
       {toast && <div className="toast" onAnimationEnd={() => setToast("")}>{toast}</div>}
     </AppShell>
   );

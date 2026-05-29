@@ -3,9 +3,11 @@ package com.company.aidevstaff.github.presentation;
 import com.company.aidevstaff.github.application.GitHubIssueSyncService;
 import com.company.aidevstaff.github.infrastructure.GitHubClient;
 import com.company.aidevstaff.github.infrastructure.GitHubProperties;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,6 +45,11 @@ public class GitHubController {
         return gitHubClient.findIssuesByLabel(label).stream()
                 .map(GitHubIssueResponse::from)
                 .toList();
+    }
+
+    @PostMapping("/issues")
+    public GitHubIssueResponse createIssue(@Valid @RequestBody CreateGitHubIssueRequest request) {
+        return GitHubIssueResponse.from(gitHubClient.createIssue(request.title(), request.body(), request.labels()));
     }
 
     @PostMapping("/sync-ready-issues")

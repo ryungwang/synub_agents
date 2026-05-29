@@ -19,6 +19,8 @@ spring:
     enabled: true
 
 app:
+  admin:
+    token: ${ADMIN_TOKEN:}
   github:
     token: ${GITHUB_TOKEN:}
     owner: ${GITHUB_OWNER:}

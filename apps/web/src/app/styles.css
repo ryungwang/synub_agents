@@ -86,20 +86,28 @@ button {
   gap: 6px;
 }
 
-.nav-list a {
+.nav-list button {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-height: 42px;
   padding: 0 12px;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   color: var(--graphite);
-  text-decoration: none;
   font-weight: 800;
+  text-align: left;
 }
 
-.nav-list a:hover {
+.nav-list button:hover,
+.nav-list button.active {
   background: #e6edf3;
+}
+
+.nav-list button.active {
+  color: var(--blue);
 }
 
 .safety-card {
@@ -118,6 +126,47 @@ button {
 .content {
   min-width: 0;
   padding: 24px;
+}
+
+.page-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-card {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 420px);
+  padding: 26px;
+  border: 1px solid rgba(190, 201, 211, 0.8);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.auth-card h1 {
+  font-size: 28px;
+}
+
+.auth-card input {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.error-text {
+  margin: 0;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .topbar {
