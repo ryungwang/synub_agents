@@ -11,6 +11,13 @@ This repository contains a real service scaffold, not a static demo:
 - `infra/docker`: local PostgreSQL and container images
 - `docs`: architecture, contracts, security policy, and runbook
 
+## Manuals
+
+- [운영자 매뉴얼](docs/OPERATOR_MANUAL.md)
+- [Codex Worker 매뉴얼](docs/WORKER_MANUAL.md)
+- [운영 런북](docs/operation-runbook.md)
+- [보안 정책](docs/security-policy.md)
+
 ## Local Run
 
 ### API with local H2
