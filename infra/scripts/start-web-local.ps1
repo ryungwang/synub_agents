@@ -10,7 +10,7 @@ try {
   if (-not (Test-Path "node_modules")) {
     npm install
   }
-  npm run dev -- --host 127.0.0.1 --port 3002
+  .\node_modules\.bin\vite.cmd --host 127.0.0.1 --port 3002 --strictPort
 } finally {
   Pop-Location
 }

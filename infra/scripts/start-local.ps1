@@ -41,6 +41,7 @@ function Start-LocalProcess {
     $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($connection) {
       Write-Host "$Name port $Port is already in use. Existing PID: $($connection.OwningProcess)"
+      Set-Content -LiteralPath $pidFile -Value $connection.OwningProcess
       return
     }
   }

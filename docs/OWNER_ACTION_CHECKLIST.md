@@ -68,11 +68,17 @@ cd C:\Users\User\intellij-workspace\synub_agents
 
 확인할 것:
 
-- [ ] 명령 실행 시 오류 없이 종료된다.
-- [ ] `http://127.0.0.1:3002` 접속이 된다.
-- [ ] 대시보드 화면이 한국어로 보인다.
-- [ ] `.run\logs` 폴더에 로그가 생성된다.
-- [ ] 종료 명령이 동작한다.
+- [x] 명령 실행 시 오류 없이 종료된다.
+- [x] `http://127.0.0.1:3002` 접속이 된다.
+- [x] 대시보드 화면이 한국어로 보인다.
+- [x] `.run\logs` 폴더에 로그가 생성된다.
+- [x] 종료 명령이 동작한다.
+
+참고:
+
+- API와 웹이 이미 떠 있던 상태에서 `start-local.ps1`을 실행하면 새 로그 파일이 없을 수 있다.
+- `start-local.ps1`이 직접 새로 실행한 프로세스의 출력만 `.run\logs`에 저장된다.
+- 이미 떠 있던 API/웹도 `start-local.ps1`이 PID를 기록하므로 이후 `stop-local.ps1`로 종료할 수 있다.
 
 종료 명령:
 
@@ -222,7 +228,7 @@ cd C:\Users\User\intellij-workspace\synub_agents
 
 - [x] GitHub 토큰 발급 완료
 - [x] `.env` 기본 설정 완료
-- [ ] 로컬 대시보드 실행 확인
+- [x] 로컬 대시보드 실행 확인
 - [ ] GitHub status `reachable: true`
 - [ ] 직원용 앱 오류 제보 테스트 완료
 - [ ] 오류 제보함에서 테스트 이슈 확인

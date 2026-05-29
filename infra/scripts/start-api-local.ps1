@@ -15,13 +15,11 @@ if (Test-Path $jdk) {
 }
 
 $jar = Join-Path $root "apps\api\build\libs\ai-dev-staff-api-0.1.0.jar"
-if (-not (Test-Path $jar)) {
-  Push-Location $root
-  try {
-    .\gradlew.bat -p apps\api bootJar
-  } finally {
-    Pop-Location
-  }
+Push-Location $root
+try {
+  .\gradlew.bat -p apps\api bootJar
+} finally {
+  Pop-Location
 }
 
 Push-Location $root
