@@ -10,6 +10,9 @@ class WorkerSettings:
     admin_token: str
     worker_secret: str
     codex_command: str
+    claude_command: str
+    claude_permission_mode: str
+    claude_skip_permissions: bool
     poll_seconds: int
     github_token: str
     github_owner: str
@@ -23,6 +26,9 @@ def load_settings() -> WorkerSettings:
         admin_token=os.environ.get("ADMIN_TOKEN", ""),
         worker_secret=os.environ.get("WORKER_SECRET", "local-worker-secret"),
         codex_command=os.environ.get("CODEX_COMMAND", "codex"),
+        claude_command=os.environ.get("CLAUDE_COMMAND", "claude"),
+        claude_permission_mode=os.environ.get("CLAUDE_PERMISSION_MODE", "acceptEdits"),
+        claude_skip_permissions=os.environ.get("CLAUDE_SKIP_PERMISSIONS", "false").lower() == "true",
         poll_seconds=int(os.environ.get("WORKER_POLL_SECONDS", "10")),
         github_token=os.environ.get("GITHUB_TOKEN", ""),
         github_owner=os.environ.get("GITHUB_OWNER", ""),

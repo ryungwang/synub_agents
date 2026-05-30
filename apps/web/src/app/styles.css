@@ -652,6 +652,13 @@ code {
   min-width: 0;
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .row-action-message {
   max-width: 260px;
   margin: 0;
@@ -1303,6 +1310,28 @@ button:disabled {
   grid-template-columns: 110px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+}
+
+.central-ai-list {
+  display: grid;
+  gap: 10px;
+}
+
+.central-ai-row {
+  grid-template-columns: minmax(110px, 1fr) auto;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-2);
+}
+
+.central-ai-row p,
+.central-ai-row em {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  overflow-wrap: anywhere;
 }
 
 .service-row-value em {

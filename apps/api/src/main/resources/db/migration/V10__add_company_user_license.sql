@@ -1,5 +1,7 @@
 alter table company_users
-  add column if not exists license_status varchar(40) not null default 'UNASSIGNED',
+  add column if not exists license_status varchar(40) not null default 'UNASSIGNED';
+
+alter table company_users
   add column if not exists license_assigned_at timestamp with time zone;
 
 update company_users

@@ -53,6 +53,11 @@ public class WorkerJobService {
 
     @Transactional
     public WorkerJob createForTask(Long taskId) {
+        return createForTask(taskId, null);
+    }
+
+    @Transactional
+    public WorkerJob createForTask(Long taskId, WorkerType requestedWorkerType) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("task not found: " + taskId));
         ensureExecutableTask(task);
@@ -63,15 +68,21 @@ public class WorkerJobService {
         if (task.getRiskLevel() == TaskRiskLevel.HIGH) {
             throw new IllegalArgumentException("high risk task requires approval before worker job creation");
         }
-        String command = workerProperties.codexCommand() + " exec \"" + escape(task.getTitle()) + "\"";
-        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, WorkerType.CODEX, resolveWorkspacePath(task), command));
+        WorkerType workerType = resolveWorkerType(requestedWorkerType);
+        String command = buildDisplayCommand(workerType, task);
+        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, workerType, resolveWorkspacePath(task), command));
         task.markWorkerJobCreated();
-        auditLogService.record("SYSTEM", "worker", "WORKER_JOB_CREATED", "TASK", String.valueOf(taskId), "jobId=" + job.getId());
+        auditLogService.record("SYSTEM", "worker", "WORKER_JOB_CREATED", "TASK", String.valueOf(taskId), "jobId=" + job.getId() + ", workerType=" + workerType);
         return job;
     }
 
     @Transactional
     public WorkerJob retryTask(Long taskId) {
+        return retryTask(taskId, null);
+    }
+
+    @Transactional
+    public WorkerJob retryTask(Long taskId, WorkerType requestedWorkerType) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("task not found: " + taskId));
         if (task.getStatus() != TaskStatus.FAILED) {
@@ -90,14 +101,15 @@ public class WorkerJobService {
         if (task.getRiskLevel() == TaskRiskLevel.HIGH) {
             throw new IllegalArgumentException("고위험 작업은 재시도 전 승인이 필요합니다.");
         }
-        String command = workerProperties.codexCommand() + " exec \"" + escape(task.getTitle()) + "\"";
-        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, WorkerType.CODEX, resolveWorkspacePath(task), command));
+        WorkerType workerType = resolveWorkerType(requestedWorkerType);
+        String command = buildDisplayCommand(workerType, task);
+        WorkerJob job = workerJobRepository.save(new WorkerJob(taskId, workerType, resolveWorkspacePath(task), command));
         task.markRetryQueued();
         workRequestRepository.findByTaskId(taskId).ifPresent(workRequest -> {
             workRequest.markTaskCreated(taskId);
             workRequestRepository.save(workRequest);
         });
-        auditLogService.record("USER", "operator", "WORKER_JOB_RETRY_CREATED", "TASK", String.valueOf(taskId), "jobId=" + job.getId());
+        auditLogService.record("USER", "operator", "WORKER_JOB_RETRY_CREATED", "TASK", String.valueOf(taskId), "jobId=" + job.getId() + ", workerType=" + workerType);
         return job;
     }
 
@@ -148,7 +160,7 @@ public class WorkerJobService {
             request.markRunning();
             workRequestRepository.save(request);
         });
-        auditLogService.record("WORKER", "codex-worker", "WORKER_JOB_CLAIMED", "WORKER_JOB", String.valueOf(job.getId()), null);
+        auditLogService.record("WORKER", "central-ai-worker", "WORKER_JOB_CLAIMED", "WORKER_JOB", String.valueOf(job.getId()), "workerType=" + job.getWorkerType());
         return job;
     }
 
@@ -205,7 +217,7 @@ public class WorkerJobService {
                 job.getStartedAt(),
                 job.getFinishedAt()
         ));
-        auditLogService.record("WORKER", "codex-worker", "WORKER_JOB_REPORTED", "WORKER_JOB", String.valueOf(jobId), request.summary());
+        auditLogService.record("WORKER", "central-ai-worker", "WORKER_JOB_REPORTED", "WORKER_JOB", String.valueOf(jobId), request.summary());
         return job;
     }
 
@@ -224,6 +236,25 @@ public class WorkerJobService {
 
     private String escape(String value) {
         return value.replace("\"", "\\\"");
+    }
+
+    private WorkerType resolveWorkerType(WorkerType requestedWorkerType) {
+        if (requestedWorkerType != null) {
+            return requestedWorkerType;
+        }
+        String configured = workerProperties.defaultWorkerType();
+        if (configured == null || configured.isBlank()) {
+            return WorkerType.CODEX;
+        }
+        return WorkerType.valueOf(configured.trim().toUpperCase());
+    }
+
+    private String buildDisplayCommand(WorkerType workerType, Task task) {
+        String prompt = escape(task.getTitle());
+        return switch (workerType) {
+            case CLAUDE -> workerProperties.claudeCommand() + " -p \"" + prompt + "\"";
+            case CODEX -> workerProperties.codexCommand() + " exec \"" + prompt + "\"";
+        };
     }
 
     private String resolveWorkspacePath(Task task) {

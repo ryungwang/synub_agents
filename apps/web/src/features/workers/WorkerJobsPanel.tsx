@@ -20,7 +20,7 @@ export function WorkerJobsPanel({ jobs }: { jobs: WorkerJob[] }) {
             <article className="work-item work-row" key={job.id}>
               <div className="work-index">{job.id}</div>
               <div className="work-row-main">
-                <strong>작업 {job.taskId}</strong>
+                <strong>작업 {job.taskId} · {workerTypeLabel(job.workerType)}</strong>
                 <code>{job.pullRequestUrl ?? job.resultBranch ?? job.command}</code>
                 {job.errorMessage && <p className="danger-text">{job.errorMessage}</p>}
               </div>
@@ -33,4 +33,8 @@ export function WorkerJobsPanel({ jobs }: { jobs: WorkerJob[] }) {
       </div>
     </section>
   );
+}
+
+function workerTypeLabel(workerType: WorkerJob["workerType"]) {
+  return workerType === "CLAUDE" ? "Claude" : "Codex";
 }

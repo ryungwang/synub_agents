@@ -1,29 +1,66 @@
 package com.company.aidevstaff.localops.application;
 
+import com.company.aidevstaff.worker.domain.WorkerType;
+import com.company.aidevstaff.worker.infrastructure.WorkerProperties;
 import java.io.IOException;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
 @Profile({"local", "local-postgres"})
 public class LocalServiceControlService {
+    private final WorkerProperties workerProperties;
     private final Path root = Path.of("").toAbsolutePath().normalize();
     private final Path runDir = root.resolve(".run");
     private final Path logDir = runDir.resolve("logs");
     private final Path workerPidFile = runDir.resolve("worker.pid");
+
+    public LocalServiceControlService(WorkerProperties workerProperties) {
+        this.workerProperties = workerProperties;
+    }
 
     public LocalServicesStatus status() {
         return new LocalServicesStatus(
                 true,
                 isPortListening(3002),
                 workerStatus(),
+                centralAiStatus(),
                 root.toString(),
                 logDir.toString(),
+                Instant.now()
+        );
+    }
+
+    public AiProviderStatus testAiProvider(WorkerType workerType) {
+        String command = commandFor(workerType);
+        AiProviderStatus installedStatus = inspectProvider(workerType, command);
+        if (!installedStatus.installed()) {
+            return installedStatus;
+        }
+
+        ProcessResult result = runProcess(testCommand(workerType, command), root, Duration.ofSeconds(60));
+        boolean ok = result.exitCode() == 0 && result.output().toUpperCase(Locale.ROOT).contains("PONG");
+        String message = ok
+                ? "중앙 실행 테스트 성공"
+                : trimMessage(result.output().isBlank() ? "테스트 실행 실패" : result.output());
+        return new AiProviderStatus(
+                workerType,
+                displayName(workerType),
+                command,
+                true,
+                installedStatus.version(),
+                ok,
+                message,
                 Instant.now()
         );
     }
@@ -150,10 +187,115 @@ public class LocalServiceControlService {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
     }
 
+    private List<AiProviderStatus> centralAiStatus() {
+        return List.of(
+                inspectProvider(WorkerType.CODEX, commandFor(WorkerType.CODEX)),
+                inspectProvider(WorkerType.CLAUDE, commandFor(WorkerType.CLAUDE))
+        );
+    }
+
+    private AiProviderStatus inspectProvider(WorkerType workerType, String command) {
+        Optional<String> resolved = resolveCommand(command);
+        if (resolved.isEmpty()) {
+            return new AiProviderStatus(workerType, displayName(workerType), command, false, null, false, "CLI를 찾을 수 없습니다", Instant.now());
+        }
+
+        ProcessResult versionResult = runProcess(List.of(command, "--version"), root, Duration.ofSeconds(8));
+        String version = versionResult.exitCode() == 0 ? firstLine(versionResult.output()) : null;
+        String message = versionResult.exitCode() == 0 ? "CLI 설치 확인" : trimMessage(versionResult.output());
+        return new AiProviderStatus(workerType, displayName(workerType), command, true, version, false, message, Instant.now());
+    }
+
+    private Optional<String> resolveCommand(String command) {
+        if (command == null || command.isBlank()) {
+            return Optional.empty();
+        }
+        Path path = Path.of(command);
+        if (path.isAbsolute() || command.contains("/") || command.contains("\\")) {
+            return Files.isExecutable(path) ? Optional.of(path.toString()) : Optional.empty();
+        }
+        ProcessResult result = isWindows()
+                ? runProcess(List.of("where", command), root, Duration.ofSeconds(5))
+                : runProcess(List.of("bash", "-lc", "command -v " + shellQuote(command)), root, Duration.ofSeconds(5));
+        if (result.exitCode() != 0 || result.output().isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(firstLine(result.output()));
+    }
+
+    private List<String> testCommand(WorkerType workerType, String command) {
+        return switch (workerType) {
+            case CODEX -> List.of(command, "exec", "--cd", root.toString(), "--sandbox", "read-only", "Output only PONG.");
+            case CLAUDE -> List.of(command, "-p", "Output only PONG.", "--output-format", "text", "--max-turns", "1", "--no-session-persistence");
+        };
+    }
+
+    private String commandFor(WorkerType workerType) {
+        return switch (workerType) {
+            case CODEX -> blankToDefault(workerProperties.codexCommand(), "codex");
+            case CLAUDE -> blankToDefault(workerProperties.claudeCommand(), "claude");
+        };
+    }
+
+    private String displayName(WorkerType workerType) {
+        return workerType == WorkerType.CLAUDE ? "Claude" : "Codex";
+    }
+
+    private String blankToDefault(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private ProcessResult runProcess(List<String> command, Path directory, Duration timeout) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(command)
+                    .directory(directory.toFile())
+                    .redirectInput(nullDevice())
+                    .redirectErrorStream(true);
+            Process process = processBuilder
+                    .start();
+            boolean finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return new ProcessResult(124, "명령 시간이 초과되었습니다.");
+            }
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            return new ProcessResult(process.exitValue(), output);
+        } catch (IOException exception) {
+            return new ProcessResult(127, exception.getMessage());
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return new ProcessResult(130, "명령 실행이 중단되었습니다.");
+        }
+    }
+
+    private String shellQuote(String value) {
+        return "'" + value.replace("'", "'\"'\"'") + "'";
+    }
+
+    private ProcessBuilder.Redirect nullDevice() {
+        return ProcessBuilder.Redirect.from(new File(isWindows() ? "NUL" : "/dev/null"));
+    }
+
+    private String firstLine(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return value.lines().findFirst().orElse("").trim();
+    }
+
+    private String trimMessage(String value) {
+        String firstLine = firstLine(value);
+        if (firstLine.length() <= 220) {
+            return firstLine;
+        }
+        return firstLine.substring(0, 220);
+    }
+
     public record LocalServicesStatus(
             boolean apiRunning,
             boolean webRunning,
             WorkerProcessStatus worker,
+            List<AiProviderStatus> centralAi,
             String workspaceRoot,
             String logDirectory,
             Instant checkedAt
@@ -161,5 +303,20 @@ public class LocalServiceControlService {
     }
 
     public record WorkerProcessStatus(boolean running, Long pid) {
+    }
+
+    public record AiProviderStatus(
+            WorkerType workerType,
+            String displayName,
+            String command,
+            boolean installed,
+            String version,
+            boolean testPassed,
+            String message,
+            Instant checkedAt
+    ) {
+    }
+
+    private record ProcessResult(int exitCode, String output) {
     }
 }

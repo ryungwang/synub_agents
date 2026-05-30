@@ -1,5 +1,5 @@
 import { http } from "./httpClient";
-import type { LocalServicesStatus } from "../types/domain";
+import type { AiProviderStatus, LocalServicesStatus, WorkerType } from "../types/domain";
 
 export function fetchLocalServicesStatus() {
   return http<LocalServicesStatus>("/api/local-services/status");
@@ -11,4 +11,8 @@ export function startWorkerService() {
 
 export function stopWorkerService() {
   return http<LocalServicesStatus>("/api/local-services/worker/stop", { method: "POST" });
+}
+
+export function testAiProvider(workerType: WorkerType) {
+  return http<AiProviderStatus>(`/api/local-services/ai/${workerType}/test`, { method: "POST" });
 }

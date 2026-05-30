@@ -33,6 +33,8 @@ app:
     secret: ${WORKER_SECRET:local-worker-secret}
     workspace-root: ${CODEX_WORKSPACE_ROOT:}
     codex-command: ${CODEX_COMMAND:codex}
+    claude-command: ${CLAUDE_COMMAND:claude}
+    default-worker-type: ${CENTRAL_AI_DEFAULT_PROVIDER:CODEX}
 
 management:
   endpoints:

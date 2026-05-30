@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record WorkerProperties(
         String secret,
         String workspaceRoot,
-        String codexCommand
+        String codexCommand,
+        String claudeCommand,
+        String defaultWorkerType
 ) {
 }

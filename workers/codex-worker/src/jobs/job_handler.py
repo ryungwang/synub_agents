@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from codex.command_builder import build_codex_command
+from codex.agent_command import build_agent_command
 from codex.prompt_renderer import render_prompt
 from codex.result_parser import infer_test_result, summarize_output
 from config.settings import WorkerSettings
@@ -15,7 +15,16 @@ from git.repository import resolve_workspace
 def handle_job(job: dict, task: dict, settings: WorkerSettings, logs_dir: Path) -> dict:
     workspace = resolve_workspace(job.get("workspacePath"))
     prompt = render_prompt(job, task)
-    command = build_codex_command(settings.codex_command, workspace, prompt)
+    worker_type = job.get("workerType") or "CODEX"
+    command = build_agent_command(
+        worker_type,
+        settings.codex_command,
+        settings.claude_command,
+        settings.claude_permission_mode,
+        settings.claude_skip_permissions,
+        workspace,
+        prompt,
+    )
     logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = logs_dir / f"worker-job-{job['id']}.log"
 
@@ -40,7 +49,7 @@ def handle_job(job: dict, task: dict, settings: WorkerSettings, logs_dir: Path) 
             "diffSummary": collect_diff_summary(workspace),
             "testResult": infer_test_result(output, result.returncode),
             "logPath": str(log_path),
-            "errorMessage": None if success else f"Codex exited with {result.returncode}",
+            "errorMessage": None if success else f"{worker_type.title()} exited with {result.returncode}",
             "resultBranch": publish_result.branch_name if publish_result else None,
             "pullRequestUrl": publish_result.pull_request_url if publish_result else None,
         }

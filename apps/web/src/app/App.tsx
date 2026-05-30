@@ -3,7 +3,7 @@ import { createAgent, fetchAgents, type CreateAgentPayload } from "../api/agents
 import { approveTask, fetchApprovals } from "../api/approvalsApi";
 import { fetchAuditLogs } from "../api/auditApi";
 import { fetchGitHubIssues, fetchGitHubStatus, markIssueCodexReady, syncReadyIssues } from "../api/githubApi";
-import { fetchLocalServicesStatus, startWorkerService, stopWorkerService } from "../api/localServicesApi";
+import { fetchLocalServicesStatus, startWorkerService, stopWorkerService, testAiProvider } from "../api/localServicesApi";
 import { createWorkerJob, fetchTasks, retryWorkerJob } from "../api/tasksApi";
 import {
   addProjectMember,
@@ -49,7 +49,8 @@ import type {
   ProjectMember,
   ProjectWorkRequest,
   Task,
-  WorkerJob
+  WorkerJob,
+  WorkerType
 } from "../types/domain";
 
 const pageMeta: Record<AdminPage, { title: string; description: string }> = {
@@ -85,6 +86,7 @@ export function App() {
   const [syncing, setSyncing] = useState(false);
   const [loadingIssues, setLoadingIssues] = useState(false);
   const [localServiceBusy, setLocalServiceBusy] = useState(false);
+  const [aiProviderBusy, setAiProviderBusy] = useState<WorkerType | null>(null);
   const [taskActionMessages, setTaskActionMessages] = useState<Record<number, { tone: "good" | "danger"; message: string }>>({});
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
   const [toast, setToast] = useState("");
@@ -239,15 +241,16 @@ export function App() {
     }
   }
 
-  async function handleCreateWorkerJob(taskId: number) {
+  async function handleCreateWorkerJob(taskId: number, workerType: WorkerType = "CODEX") {
     try {
-      await createWorkerJob(taskId);
+      await createWorkerJob(taskId, workerType);
       await refresh();
+      const workerLabel = workerType === "CLAUDE" ? "Claude" : "Codex";
       setTaskActionMessages((current) => ({
         ...current,
-        [taskId]: { tone: "good", message: "작업 실행을 생성했습니다." }
+        [taskId]: { tone: "good", message: `${workerLabel} 실행을 생성했습니다.` }
       }));
-      setToast("작업 실행을 생성했습니다.");
+      setToast(`${workerLabel} 실행을 생성했습니다.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "작업 실행 생성 실패";
       setTaskActionMessages((current) => ({
@@ -261,7 +264,7 @@ export function App() {
   async function handleBulkCreateWorkerJobs(taskIds: number[]) {
     requestConfirm({
       title: "작업 실행 일괄 생성",
-      message: `${taskIds.length}건의 Codex 실행 작업을 생성합니다.`,
+      message: `${taskIds.length}건의 기본 AI 실행 작업을 생성합니다.`,
       confirmLabel: "실행 생성",
       onConfirm: () => performBulkCreateWorkerJobs(taskIds)
     });
@@ -362,6 +365,25 @@ export function App() {
       setToast(error instanceof Error ? error.message : "워커 중지 실패");
     } finally {
       setLocalServiceBusy(false);
+    }
+  }
+
+  async function handleTestAiProvider(workerType: WorkerType) {
+    setAiProviderBusy(workerType);
+    try {
+      const result = await testAiProvider(workerType);
+      setLocalServicesStatus((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          centralAi: current.centralAi.map((provider) => provider.workerType === workerType ? result : provider)
+        };
+      });
+      setToast(result.testPassed ? `${result.displayName} 중앙 연결 테스트 성공` : `${result.displayName} 중앙 연결 테스트 실패: ${result.message}`);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "중앙 AI 연결 테스트 실패");
+    } finally {
+      setAiProviderBusy(null);
     }
   }
 
@@ -558,8 +580,10 @@ export function App() {
             <LocalServicesPanel
               status={localServicesStatus}
               busy={localServiceBusy}
+              aiBusy={aiProviderBusy}
               onStartWorker={handleStartWorkerService}
               onStopWorker={handleStopWorkerService}
+              onTestAiProvider={handleTestAiProvider}
             />
           </section>
         );
@@ -574,8 +598,10 @@ export function App() {
             <LocalServicesPanel
               status={localServicesStatus}
               busy={localServiceBusy}
+              aiBusy={aiProviderBusy}
               onStartWorker={handleStartWorkerService}
               onStopWorker={handleStopWorkerService}
+              onTestAiProvider={handleTestAiProvider}
             />
           </section>
         );

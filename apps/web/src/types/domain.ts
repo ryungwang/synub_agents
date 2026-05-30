@@ -3,6 +3,7 @@ export type TaskRiskLevel = "LOW" | "MEDIUM" | "HIGH";
 export type TaskStatus = "QUEUED" | "APPROVAL_REQUIRED" | "WORKER_JOB_CREATED" | "RUNNING" | "PR_READY" | "PR_OPEN" | "DONE" | "FAILED";
 export type ApprovalStatus = "WAITING" | "APPROVED" | "REJECTED";
 export type WorkerJobStatus = "PENDING" | "CLAIMED" | "RUNNING" | "SUCCEEDED" | "FAILED";
+export type WorkerType = "CODEX" | "CLAUDE";
 
 export interface Agent {
   id: string;
@@ -46,7 +47,7 @@ export interface WorkerJob {
   id: number;
   taskId: number;
   status: WorkerJobStatus;
-  workerType: "CODEX";
+  workerType: WorkerType;
   workspacePath: string | null;
   command: string;
   resultBranch: string | null;
@@ -85,8 +86,20 @@ export interface LocalServicesStatus {
     running: boolean;
     pid: number | null;
   };
+  centralAi: AiProviderStatus[];
   workspaceRoot: string;
   logDirectory: string;
+  checkedAt: string;
+}
+
+export interface AiProviderStatus {
+  workerType: WorkerType;
+  displayName: string;
+  command: string;
+  installed: boolean;
+  version: string | null;
+  testPassed: boolean;
+  message: string;
   checkedAt: string;
 }
 

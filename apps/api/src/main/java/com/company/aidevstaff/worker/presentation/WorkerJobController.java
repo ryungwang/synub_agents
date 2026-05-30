@@ -1,6 +1,7 @@
 package com.company.aidevstaff.worker.presentation;
 
 import com.company.aidevstaff.worker.application.WorkerJobService;
+import com.company.aidevstaff.worker.domain.WorkerType;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,13 +35,13 @@ public class WorkerJobController {
     }
 
     @PostMapping("/tasks/{taskId}")
-    public WorkerJobResponse create(@PathVariable Long taskId) {
-        return WorkerJobResponse.from(workerJobService.createForTask(taskId));
+    public WorkerJobResponse create(@PathVariable Long taskId, @RequestBody(required = false) CreateWorkerJobRequest request) {
+        return WorkerJobResponse.from(workerJobService.createForTask(taskId, request == null ? null : request.workerType()));
     }
 
     @PostMapping("/tasks/{taskId}/retry")
-    public WorkerJobResponse retry(@PathVariable Long taskId) {
-        return WorkerJobResponse.from(workerJobService.retryTask(taskId));
+    public WorkerJobResponse retry(@PathVariable Long taskId, @RequestBody(required = false) CreateWorkerJobRequest request) {
+        return WorkerJobResponse.from(workerJobService.retryTask(taskId, request == null ? null : request.workerType()));
     }
 
     @PostMapping("/claim-next")
@@ -51,5 +52,8 @@ public class WorkerJobController {
     @PostMapping("/{jobId}/report")
     public WorkerJobResponse report(@PathVariable Long jobId, @RequestBody WorkerJobService.WorkerJobReportRequest request) {
         return WorkerJobResponse.from(workerJobService.report(jobId, request));
+    }
+
+    public record CreateWorkerJobRequest(WorkerType workerType) {
     }
 }

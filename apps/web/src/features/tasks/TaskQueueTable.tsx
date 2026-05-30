@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { riskLabel, statusLabel } from "../../app/labels";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge, riskTone, statusTone } from "../../components/ui/StatusBadge";
-import type { Task } from "../../types/domain";
+import type { Task, WorkerType } from "../../types/domain";
 
 interface Props {
   tasks: Task[];
-  onCreateWorkerJob: (taskId: number) => void;
+  onCreateWorkerJob: (taskId: number, workerType?: WorkerType) => void;
   onBulkCreateWorkerJobs?: (taskIds: number[]) => void;
   onSelectTask: (task: Task) => void;
   actionMessages?: Record<number, { tone: "good" | "danger"; message: string }>;
@@ -145,7 +145,7 @@ function renderTaskRow({
   actionMessage?: { tone: "good" | "danger"; message: string };
   onToggle: (taskId: number) => void;
   onSelectTask: (task: Task) => void;
-  onCreateWorkerJob: (taskId: number) => void;
+  onCreateWorkerJob: (taskId: number, workerType?: WorkerType) => void;
 }) {
   return (
     <article className={`work-item work-row clickable ${bulkMode ? "bulk-work-row" : ""} ${!executable ? "blocked-work-row" : ""}`} key={task.id} onClick={() => onSelectTask(task)}>
@@ -178,12 +178,20 @@ function renderTaskRow({
       <div className="work-row-side">
         <code>{task.prUrl ?? task.branchName ?? "아직 브랜치 없음"}</code>
         {executable ? (
-          <button className="ghost-button" type="button" onClick={(event) => {
-            event.stopPropagation();
-            onCreateWorkerJob(task.id);
-          }}>
-            작업 실행 생성
-          </button>
+          <div className="inline-actions">
+            <button className="ghost-button" type="button" onClick={(event) => {
+              event.stopPropagation();
+              onCreateWorkerJob(task.id, "CODEX");
+            }}>
+              Codex 실행
+            </button>
+            <button className="ghost-button" type="button" onClick={(event) => {
+              event.stopPropagation();
+              onCreateWorkerJob(task.id, "CLAUDE");
+            }}>
+              Claude 실행
+            </button>
+          </div>
         ) : (
           <p className="row-blocked-reason">{executionBlockedReason(task)}</p>
         )}

@@ -30,4 +30,10 @@ else
   export CODEX_COMMAND="${CODEX_COMMAND:-codex}"
 fi
 
+if command -v claude >/dev/null 2>&1; then
+  export CLAUDE_COMMAND="${CLAUDE_COMMAND:-$(command -v claude)}"
+else
+  export CLAUDE_COMMAND="${CLAUDE_COMMAND:-claude}"
+fi
+
 .venv/bin/python src/main.py

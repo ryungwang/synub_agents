@@ -2,12 +2,13 @@ from __future__ import annotations
 
 
 def render_prompt(job: dict, task: dict) -> str:
-    return f"""You are a Codex worker for the 24/7 AI development staff system.
+    worker_type = job.get("workerType") or "CODEX"
+    return f"""You are a central {worker_type.title()} worker for the 24/7 AI development staff system.
 
 Worker job:
 - id: {job["id"]}
 - taskId: {job["taskId"]}
-- workerType: {job["workerType"]}
+- workerType: {worker_type}
 
 Task:
 - title: {task.get("title")}
