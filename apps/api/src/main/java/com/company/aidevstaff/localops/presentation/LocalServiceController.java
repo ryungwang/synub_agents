@@ -26,6 +26,11 @@ public class LocalServiceController {
         return service.status();
     }
 
+    @GetMapping("/public/central-ai")
+    public java.util.List<AiProviderStatus> publicCentralAiStatus() {
+        return service.status().centralAi();
+    }
+
     @PostMapping("/worker/start")
     public LocalServicesStatus startWorker() {
         return service.startWorker();
