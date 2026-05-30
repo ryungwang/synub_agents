@@ -65,9 +65,6 @@ public class AdminTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/workspace/work-requests") && "GET".equalsIgnoreCase(method)) {
             return false;
         }
-        if (path.equals("/api/local-services/public/central-ai") && "GET".equalsIgnoreCase(method)) {
-            return false;
-        }
 
         return path.startsWith("/api/agents")
                 || path.startsWith("/api/tasks")
