@@ -16,3 +16,7 @@ export function stopWorkerService() {
 export function testAiProvider(workerType: WorkerType) {
   return http<AiProviderStatus>(`/api/local-services/ai/${workerType}/test`, { method: "POST" });
 }
+
+export function connectAiProvider(workerType: WorkerType) {
+  return http<AiProviderStatus>(`/api/local-services/ai/${workerType}/connect`, { method: "POST" });
+}

@@ -40,4 +40,9 @@ public class LocalServiceController {
     public AiProviderStatus testAiProvider(@PathVariable WorkerType workerType) {
         return service.testAiProvider(workerType);
     }
+
+    @PostMapping("/ai/{workerType}/connect")
+    public AiProviderStatus connectAiProvider(@PathVariable WorkerType workerType) {
+        return service.connectAiProvider(workerType);
+    }
 }

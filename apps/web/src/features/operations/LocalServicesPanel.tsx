@@ -1,4 +1,4 @@
-import { Play, RotateCw, Square } from "lucide-react";
+import { Link2, Play, RotateCw, Square } from "lucide-react";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import type { AiProviderStatus, LocalServicesStatus, WorkerType } from "../../types/domain";
@@ -9,10 +9,11 @@ interface LocalServicesPanelProps {
   aiBusy: WorkerType | null;
   onStartWorker: () => void;
   onStopWorker: () => void;
+  onConnectAiProvider: (workerType: WorkerType) => void;
   onTestAiProvider: (workerType: WorkerType) => void;
 }
 
-export function LocalServicesPanel({ status, busy, aiBusy, onStartWorker, onStopWorker, onTestAiProvider }: LocalServicesPanelProps) {
+export function LocalServicesPanel({ status, busy, aiBusy, onStartWorker, onStopWorker, onConnectAiProvider, onTestAiProvider }: LocalServicesPanelProps) {
   return (
     <section className="panel" id="local-services">
       <div className="panel-heading">
@@ -42,6 +43,7 @@ export function LocalServicesPanel({ status, busy, aiBusy, onStartWorker, onStop
                 key={provider.workerType}
                 provider={provider}
                 busy={aiBusy === provider.workerType}
+                onConnect={() => onConnectAiProvider(provider.workerType)}
                 onTest={() => onTestAiProvider(provider.workerType)}
               />
             ))}
@@ -65,9 +67,9 @@ export function LocalServicesPanel({ status, busy, aiBusy, onStartWorker, onStop
   );
 }
 
-function AiProviderRow({ provider, busy, onTest }: { provider: AiProviderStatus; busy: boolean; onTest: () => void }) {
+function AiProviderRow({ provider, busy, onConnect, onTest }: { provider: AiProviderStatus; busy: boolean; onConnect: () => void; onTest: () => void }) {
   const tone = provider.testPassed ? "good" : provider.installed ? "warn" : "danger";
-  const label = provider.testPassed ? "연결됨" : provider.installed ? "테스트 필요" : "미설치";
+  const label = provider.testPassed ? "중앙 연결됨" : provider.installed ? "중앙 연결 필요" : "미설치";
   return (
     <div className="settings-row central-ai-row">
       <div>
@@ -77,6 +79,10 @@ function AiProviderRow({ provider, busy, onTest }: { provider: AiProviderStatus;
       </div>
       <div className="service-row-value">
         <StatusBadge tone={tone}>{label}</StatusBadge>
+        <button className="primary-button" type="button" onClick={onConnect} disabled={busy || !provider.installed || provider.testPassed}>
+          <Link2 size={16} />
+          중앙 연결
+        </button>
         <button className="ghost-button" type="button" onClick={onTest} disabled={busy || !provider.installed}>
           <RotateCw size={16} />
           연결 테스트

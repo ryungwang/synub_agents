@@ -65,6 +65,29 @@ public class LocalServiceControlService {
         );
     }
 
+    public AiProviderStatus connectAiProvider(WorkerType workerType) {
+        String command = commandFor(workerType);
+        AiProviderStatus installedStatus = inspectProvider(workerType, command);
+        if (!installedStatus.installed()) {
+            return installedStatus;
+        }
+
+        ProcessResult result = openInteractiveLoginTerminal(workerType, command);
+        String message = result.exitCode() == 0
+                ? "중앙 PC에서 인증 터미널을 열었습니다. 로그인 완료 후 새로고침 또는 연결 테스트를 실행하세요."
+                : trimMessage(result.output().isBlank() ? "인증 터미널 실행 실패" : result.output());
+        return new AiProviderStatus(
+                workerType,
+                displayName(workerType),
+                command,
+                true,
+                installedStatus.version(),
+                installedStatus.testPassed(),
+                message,
+                Instant.now()
+        );
+    }
+
     public LocalServicesStatus startWorker() {
         if (workerStatus().running()) {
             return status();
@@ -202,8 +225,17 @@ public class LocalServiceControlService {
 
         ProcessResult versionResult = runProcess(List.of(command, "--version"), root, Duration.ofSeconds(8));
         String version = versionResult.exitCode() == 0 ? firstLine(versionResult.output()) : null;
-        String message = versionResult.exitCode() == 0 ? "CLI 설치 확인" : trimMessage(versionResult.output());
-        return new AiProviderStatus(workerType, displayName(workerType), command, true, version, false, message, Instant.now());
+        ProcessResult authResult = runProcess(authStatusCommand(workerType, command), root, Duration.ofSeconds(8));
+        boolean authenticated = authResult.exitCode() == 0 && isAuthenticatedStatus(workerType, authResult.output());
+        String message;
+        if (authenticated) {
+            message = "중앙 인증 연결됨";
+        } else if (authResult.exitCode() == 0 && !authResult.output().isBlank()) {
+            message = trimMessage(authResult.output());
+        } else {
+            message = versionResult.exitCode() == 0 ? "CLI 설치 확인, 중앙 인증 필요" : trimMessage(versionResult.output());
+        }
+        return new AiProviderStatus(workerType, displayName(workerType), command, true, version, authenticated, message, Instant.now());
     }
 
     private Optional<String> resolveCommand(String command) {
@@ -228,6 +260,53 @@ public class LocalServiceControlService {
             case CODEX -> List.of(command, "exec", "--cd", root.toString(), "--sandbox", "read-only", "Output only PONG.");
             case CLAUDE -> List.of(command, "-p", "Output only PONG.", "--output-format", "text", "--max-turns", "1", "--no-session-persistence");
         };
+    }
+
+    private List<String> authStatusCommand(WorkerType workerType, String command) {
+        return switch (workerType) {
+            case CODEX -> List.of(command, "login", "status");
+            case CLAUDE -> List.of(command, "auth", "status");
+        };
+    }
+
+    private List<String> loginCommand(WorkerType workerType, String command) {
+        return switch (workerType) {
+            case CODEX -> List.of(command, "login");
+            case CLAUDE -> List.of(command, "auth", "login");
+        };
+    }
+
+    private boolean isAuthenticatedStatus(WorkerType workerType, String output) {
+        String normalized = output == null ? "" : output.toLowerCase(Locale.ROOT);
+        return switch (workerType) {
+            case CODEX -> normalized.contains("logged in");
+            case CLAUDE -> normalized.contains("\"loggedin\": true") || normalized.contains("\"loggedIn\": true".toLowerCase(Locale.ROOT));
+        };
+    }
+
+    private ProcessResult openInteractiveLoginTerminal(WorkerType workerType, String command) {
+        String loginCommand = shellJoin(loginCommand(workerType, command));
+        List<String> launcher = terminalLaunchCommand(loginCommand);
+        return runProcess(launcher, root, Duration.ofSeconds(10));
+    }
+
+    private List<String> terminalLaunchCommand(String loginCommand) {
+        if (isWindows()) {
+            String escaped = loginCommand.replace("'", "''");
+            return List.of(
+                    "powershell",
+                    "-NoProfile",
+                    "-Command",
+                    "Start-Process powershell -ArgumentList '-NoExit','-Command','" + escaped + "'"
+            );
+        }
+
+        if (System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac")) {
+            String script = "tell application \"Terminal\" to do script " + appleScriptString(loginCommand);
+            return List.of("osascript", "-e", script);
+        }
+
+        return List.of("bash", "-lc", "x-terminal-emulator -e " + shellQuote(loginCommand) + " >/dev/null 2>&1 &");
     }
 
     private String commandFor(WorkerType workerType) {
@@ -270,6 +349,14 @@ public class LocalServiceControlService {
 
     private String shellQuote(String value) {
         return "'" + value.replace("'", "'\"'\"'") + "'";
+    }
+
+    private String shellJoin(List<String> command) {
+        return command.stream().map(this::shellQuote).reduce((left, right) -> left + " " + right).orElse("");
+    }
+
+    private String appleScriptString(String value) {
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 
     private ProcessBuilder.Redirect nullDevice() {

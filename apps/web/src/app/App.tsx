@@ -3,7 +3,7 @@ import { createAgent, fetchAgents, type CreateAgentPayload } from "../api/agents
 import { approveTask, fetchApprovals } from "../api/approvalsApi";
 import { fetchAuditLogs } from "../api/auditApi";
 import { fetchGitHubIssues, fetchGitHubStatus, markIssueCodexReady, syncReadyIssues } from "../api/githubApi";
-import { fetchLocalServicesStatus, startWorkerService, stopWorkerService, testAiProvider } from "../api/localServicesApi";
+import { connectAiProvider, fetchLocalServicesStatus, startWorkerService, stopWorkerService, testAiProvider } from "../api/localServicesApi";
 import { createWorkerJob, fetchTasks, retryWorkerJob } from "../api/tasksApi";
 import {
   addProjectMember,
@@ -387,6 +387,25 @@ export function App() {
     }
   }
 
+  async function handleConnectAiProvider(workerType: WorkerType) {
+    setAiProviderBusy(workerType);
+    try {
+      const result = await connectAiProvider(workerType);
+      setLocalServicesStatus((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          centralAi: current.centralAi.map((provider) => provider.workerType === workerType ? result : provider)
+        };
+      });
+      setToast(result.message);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "중앙 AI 연결 시작 실패");
+    } finally {
+      setAiProviderBusy(null);
+    }
+  }
+
   async function handleCreateCompanyUser(payload: CreateCompanyUserPayload) {
     try {
       await createCompanyUser(payload);
@@ -583,6 +602,7 @@ export function App() {
               aiBusy={aiProviderBusy}
               onStartWorker={handleStartWorkerService}
               onStopWorker={handleStopWorkerService}
+              onConnectAiProvider={handleConnectAiProvider}
               onTestAiProvider={handleTestAiProvider}
             />
           </section>
@@ -601,6 +621,7 @@ export function App() {
               aiBusy={aiProviderBusy}
               onStartWorker={handleStartWorkerService}
               onStopWorker={handleStopWorkerService}
+              onConnectAiProvider={handleConnectAiProvider}
               onTestAiProvider={handleTestAiProvider}
             />
           </section>
