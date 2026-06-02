@@ -4,17 +4,22 @@ Synub Teams AI의 프로젝트 탭, AI 팀 생성, 팀 시작 흐름은 반드�
 
 ## 기본 원칙
 
-- 테스트는 실제 패키징 결과물인 `release\win-unpacked\SynubTeamsAI.exe`로 수행한다.
+- 테스트는 실제 패키징 결과물로 수행한다.
+  - Windows: `release\win-unpacked\SynubTeamsAI.exe`
+  - macOS: `release/mac-arm64/Synub Teams AI.app` 또는 설치된 `/Applications/Synub Teams AI.app`
 - 사용자가 볼 수 있는 앱 창을 띄운 상태에서 진행한다.
 - 기준 직원 ID는 `deer`다.
-- 기준 테스트 프로젝트 경로는 `C:\Users\User\intellij-workspace\test`다.
+- 기준 테스트 프로젝트 경로는 OS별로 다르다.
+  - Windows: `C:\Users\User\intellij-workspace\test`
+  - macOS: `/Users/haru/intellij-workspace/test`
 - 기존 상태가 남아 있으면 `test` 프로젝트와 배정된 팀을 제거한 뒤 처음부터 다시 확인한다.
 - 문제가 재현되거나 수정 방향이 불명확하면 fork 원본 `https://777genius.github.io/agent-teams-ai/` 및 원본 소스를 먼저 비교한다.
 - 이 문서의 전체 기능 테스트는 최소 공통 회귀 테스트다. 수정한 기능이 있으면 공통 테스트만으로 완료 처리하지 않고, 수정 범위에 맞는 추가 테스트를 반드시 수행한다.
 - 추가 테스트는 “수정한 기능이 실제 앱에서 정상 동작하는지”, “기존 주요 흐름이 깨지지 않았는지”, “실패했던 오류가 다시 재현되지 않는지”를 확인해야 한다.
 - 수정 범위가 UI, 탭, 팀 생성, 팀 시작, 작업 지시, 프로젝트 경로, 저장 데이터, 빌드/배포 중 하나라도 포함하면 아래 변경 범위별 추가 테스트를 함께 수행한다.
+- 앱 코드를 수정했다면 macOS 결과물과 Windows 결과물을 둘 다 다시 빌드한다. 한쪽만 빌드하면 완료 처리하지 않는다.
 
-## 빌드 확인
+## Windows 빌드 확인
 
 Synub Teams AI 프로젝트 루트:
 
@@ -46,19 +51,67 @@ Get-Process SynubTeamsAI -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Process -FilePath "C:\Users\User\intellij-workspace\synub-teams-ai\release\win-unpacked\SynubTeamsAI.exe" -ArgumentList "--remote-debugging-port=9655"
 ```
 
+## macOS 빌드 확인
+
+Synub Teams AI 프로젝트 루트:
+
+```bash
+cd /Users/haru/intellij-workspace/synub-teams-ai
+```
+
+필수 검증:
+
+```bash
+pnpm typecheck
+pnpm lint:fast:files src/main/index.ts src/main/services/team/TeamProvisioningService.ts src/renderer/components/dashboard/CentralWorkspaceSection.tsx src/renderer/components/team/TeamDetailView.tsx src/renderer/components/team/dialogs/CreateTeamDialog.tsx src/renderer/components/team/dialogs/TeamModelSelector.tsx src/renderer/store/slices/teamSlice.ts
+pnpm build
+node ./scripts/stage-runtime.mjs --platform darwin-arm64
+node ./scripts/electron-builder/dist.mjs --mac --arm64
+git checkout -- resources/pricing.json
+```
+
+Node 버전은 `.nvmrc`의 `24.16.0`을 사용한다. 로컬 Node가 맞지 않아 `pnpm` engine 검증에서 막히면 먼저 Node 버전을 맞춘 뒤 다시 빌드한다. 임시 우회 빌드를 했더라도 테스트 기록에 우회 사실을 남긴다.
+
+실행 파일:
+
+```bash
+/Users/haru/intellij-workspace/synub-teams-ai/release/mac-arm64/Synub Teams AI.app
+```
+
+디버그 포트를 붙여 실제 앱을 열어야 할 때:
+
+```bash
+pkill -f "Synub Teams AI" || true
+open -n "/Users/haru/intellij-workspace/synub-teams-ai/release/mac-arm64/Synub Teams AI.app" --args --remote-debugging-port=9655
+```
+
+DMG 설치 테스트까지 필요한 경우:
+
+```bash
+open "/Users/haru/intellij-workspace/synub-teams-ai/release/Synub.Teams.AI-2.1.2-arm64.dmg"
+```
+
+DMG에서 앱을 `/Applications`로 복사한 뒤 다음으로 실행한다.
+
+```bash
+open -n "/Applications/Synub Teams AI.app" --args --remote-debugging-port=9655
+```
+
 ## 전체 기능 테스트
 
 1. 앱 실행 후 직원 인증 화면에서 `deer` 입력
 2. 홈 화면 진입 확인
 3. `test` 프로젝트가 이미 등록되어 있으면 프로젝트 탭 열기
 4. `프로젝트 등록 해제`로 `test` 프로젝트 제거
-5. `C:\Users\User\intellij-workspace\test` 프로젝트 다시 등록
+5. OS별 기준 테스트 프로젝트를 다시 등록
+   - Windows: `C:\Users\User\intellij-workspace\test`
+   - macOS: `/Users/haru/intellij-workspace/test`
 6. 프로젝트 목록에서 `test` 카드가 보이는지 확인
 7. `test`의 `프로젝트 탭 열기` 클릭
 8. 프로젝트 탭 아래에서 다음 상태 확인:
    - `로컬 프로젝트 탭`
    - 프로젝트명 `test`
-   - 경로 `C:\Users\User\intellij-workspace\test`
+   - 경로가 OS별 기준 테스트 프로젝트와 일치
    - `이 프로젝트에 배정된 AI 팀이 없습니다.`
 9. `AI 팀 구성` 클릭
 10. `프로젝트 AI 팀 만들기` 모달 확인
@@ -135,6 +188,7 @@ Start-Process -FilePath "C:\Users\User\intellij-workspace\synub-teams-ai\release
 - 작업 지시 후 새 파일이나 수정 파일이 등록한 프로젝트 폴더 안에 생기는지 확인한다.
 - 등록한 경로 하위에 임의의 추가 프로젝트 폴더가 만들어져 그 안에서 작업하지 않는지 확인한다.
 - 예를 들어 등록 경로가 `C:\Users\User\intellij-workspace\test`라면 작업 결과는 그 경로 안에 있어야 하며, `test\synub-project` 같은 별도 작업 루트가 만들어지면 실패다.
+- macOS에서 등록 경로가 `/Users/haru/intellij-workspace/test`라면 작업 결과는 그 경로 안에 있어야 하며, `/Users/haru/intellij-workspace/test/synub-project` 같은 별도 작업 루트가 만들어지면 실패다.
 - 팀원 worktree 격리를 켠 경우에만 의도된 worktree 경로가 사용되는지 확인한다.
 
 ### 작업 지시 및 메시지
