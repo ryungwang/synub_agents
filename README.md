@@ -19,6 +19,7 @@
 - [윈도우용 운영자 체크리스트](docs/OWNER_ACTION_CHECKLIST_WINDOWS.md)
 - [체크리스트 인덱스](docs/OWNER_ACTION_CHECKLIST.md)
 - [Codex Worker 매뉴얼](docs/WORKER_MANUAL.md)
+- [실제 앱 테스트 절차](docs/ACTUAL_APP_TESTING.md)
 - [GitHub 토큰 발급 및 운영 등록 절차](docs/GITHUB_TOKEN_SETUP.md)
 - [운영 런북](docs/operation-runbook.md)
 - [보안 정책](docs/security-policy.md)
@@ -145,6 +146,13 @@ CODEX_WORKSPACE_ROOT=/Users/haru/intellij-workspace/synub-teams-ai
 실제 토큰과 비밀번호는 README, 이슈, PR, 로그에 남기지 않는다.
 
 ## 운영 흐름
+
+Synub에는 두 가지 작업 흐름이 있다.
+
+- 중앙 작업 요청: 직원 앱에서 운영 콘솔로 요청을 보내고, 운영자가 검토한 뒤 중앙 워커가 처리한다.
+- 로컬 프로젝트 AI 팀: 직원 앱에서 직원이 직접 로컬 프로젝트 폴더를 열고, 그 프로젝트 탭 안에서 AI 팀을 만들어 작업한다.
+
+중앙 워커는 직원 PC의 로컬 프로젝트를 직접 조작하지 않는다. 직원 PC의 로컬 프로젝트 작업은 `Synub Teams AI` 데스크톱 앱의 프로젝트 탭에서 실행되는 AI 팀이 담당한다.
 
 1. 운영 콘솔에 로그인한다.
 2. `관제 현황`에서 GitHub, API, 웹, 워커 상태를 확인한다.

@@ -1,5 +1,7 @@
 # Worker 계약
 
+이 계약은 운영 콘솔의 중앙 작업 요청을 처리하는 Codex worker 기준이다. 직원 앱에서 직원이 직접 여는 로컬 프로젝트 AI 팀은 이 worker 계약을 사용하지 않는다.
+
 ## 처리 순서
 
 1. `POST /api/worker-jobs/claim-next`로 실행할 job을 가져온다.
