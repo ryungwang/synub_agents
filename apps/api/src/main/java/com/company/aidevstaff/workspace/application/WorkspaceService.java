@@ -196,9 +196,18 @@ public class WorkspaceService {
     }
 
     private void ensureLicensedUser(String userId) {
+        requireLicensedUser(userId);
+    }
+
+    /**
+     * 라이선스가 활성화된 직원인지 검증하고 사용자를 반환한다.
+     * 작업 요청 외 중앙 AI 토큰 발급 등 직원 게이트가 필요한 곳에서 재사용한다.
+     */
+    public CompanyUser requireLicensedUser(String userId) {
         CompanyUser user = findUser(userId);
         if (!user.isActive() || user.getLicenseStatus() != CompanyUserLicenseStatus.ACTIVE) {
-            throw new IllegalArgumentException("관리자가 라이선스를 부여한 직원만 작업 요청을 보낼 수 있습니다: " + user.getId());
+            throw new IllegalArgumentException("관리자가 라이선스를 부여한 직원만 사용할 수 있습니다: " + user.getId());
         }
+        return user;
     }
 }

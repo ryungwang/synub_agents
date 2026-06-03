@@ -35,6 +35,14 @@ app:
     codex-command: ${CODEX_COMMAND:codex}
     claude-command: ${CLAUDE_COMMAND:claude}
     default-worker-type: ${CENTRAL_AI_DEFAULT_PROVIDER:CODEX}
+  aiproxy:
+    anthropic-api-key: ${CENTRAL_ANTHROPIC_API_KEY:}
+    anthropic-base-url: ${CENTRAL_ANTHROPIC_BASE_URL:https://api.anthropic.com}
+    anthropic-version: ${CENTRAL_ANTHROPIC_VERSION:2023-06-01}
+    openai-api-key: ${CENTRAL_OPENAI_API_KEY:}
+    openai-base-url: ${CENTRAL_OPENAI_BASE_URL:https://api.openai.com}
+    public-base-url: ${CENTRAL_AI_PROXY_PUBLIC_BASE_URL:http://127.0.0.1:8080/api/ai-proxy}
+    token-ttl-seconds: ${CENTRAL_AI_PROXY_TOKEN_TTL_SECONDS:28800}
 
 management:
   endpoints:
