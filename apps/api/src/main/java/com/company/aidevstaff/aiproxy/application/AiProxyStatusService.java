@@ -56,8 +56,43 @@ public class AiProxyStatusService {
                     rateLimits
             );
         }
-        // Codex(OpenAI): v1에서는 키 설정 여부만 보고하고 모델 목록은 비운다.
-        return new ProviderStatusView(provider.clientId(), true, true, List.of(), rateLimits);
+        // Codex(OpenAI): /v1/models로 인증/모델을 best-effort 확인한다.
+        Optional<List<String>> models = fetchOpenAiModels();
+        return new ProviderStatusView(
+                provider.clientId(),
+                true,
+                models.isPresent(),
+                models.orElse(List.of()),
+                rateLimits
+        );
+    }
+
+    private Optional<List<String>> fetchOpenAiModels() {
+        try {
+            String base = properties.openaiBaseUrl() == null || properties.openaiBaseUrl().isBlank()
+                    ? "https://api.openai.com"
+                    : properties.openaiBaseUrl().replaceAll("/+$", "");
+            HttpRequest request = HttpRequest.newBuilder(URI.create(base + "/v1/models"))
+                    .header("Authorization", "Bearer " + properties.openaiApiKey())
+                    .timeout(Duration.ofSeconds(15))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                return Optional.empty();
+            }
+            JsonNode root = objectMapper.readTree(response.body());
+            List<String> models = new ArrayList<>();
+            for (JsonNode node : root.path("data")) {
+                String id = node.path("id").asText(null);
+                if (id != null && !id.isBlank()) {
+                    models.add(id);
+                }
+            }
+            return Optional.of(models);
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
     }
 
     private Optional<List<String>> fetchAnthropicModels() {

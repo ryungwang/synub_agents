@@ -32,6 +32,18 @@ public class ProxyRateLimitTracker {
         }
     }
 
+    /** OpenAI 응답 헤더(x-ratelimit-*)에서 윈도우를 추출해 저장한다. */
+    public void recordOpenai(HttpHeaders headers) {
+        List<RateLimitWindow> windows = new ArrayList<>();
+        addWindow(windows, headers, "requests", "x-ratelimit-limit-requests",
+                "x-ratelimit-remaining-requests", "x-ratelimit-reset-requests");
+        addWindow(windows, headers, "tokens", "x-ratelimit-limit-tokens",
+                "x-ratelimit-remaining-tokens", "x-ratelimit-reset-tokens");
+        if (!windows.isEmpty()) {
+            snapshots.put(AiProvider.CODEX, List.copyOf(windows));
+        }
+    }
+
     public List<RateLimitWindow> snapshot(AiProvider provider) {
         return snapshots.getOrDefault(provider, List.of());
     }
